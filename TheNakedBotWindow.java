@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Scanner;
 
 import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioInputStream;
@@ -29,6 +30,8 @@ import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
 
+import org.jibble.pircbot.IrcException;
+
 
 public class TheNakedBotWindow extends JFrame{
 	
@@ -37,41 +40,41 @@ public class TheNakedBotWindow extends JFrame{
 
 	TheNakedBotWindow(){
 	////////////////////////////////MENU STUFF////////////////////////////////
-		
+    ////////////////////////////////////////////////////////////////////////////
 		JMenuBar Menu = new JMenuBar();
 		JMenu File = new JMenu("File");
 		File.setMnemonic('f');
 		JMenu add = new JMenu("Add");
 		JMenuItem Option1 = new JMenuItem("Option1");
-		Option1.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if(e.getSource() == Option1){
-					writeImage("src/Resources/JaredOverlayAmerica.png","src/Resources/target.png");
-				};
-			}
-			
-			
-		});
-		add.add(Option1);
-		JMenuItem Option2 = new JMenuItem("Option2");
-		Option2.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if(e.getSource() == Option2){
-					writeImage("src/Resources/JaredOverlay.png","src/Resources/target.png");
-				};
-			}
-			
-			
-		});
-		add.add(Option2);
-		File.add(add);
-		
 		JMenu settings = new JMenu("Settings");
 		JMenuItem preferences = new JMenuItem("Preferences");
 		JMenuItem about = new JMenuItem("About");
 		
+		Option1.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {	
+				setOverlay("src/Resources/JaredOverlayAmerica.png");
+		        Timer timer = new Timer(1000, new ActionListener(){
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						playSound("src/Resources/AMERICANEW.wav");
+					}});
+				};
+		});
+		
+		
+		JMenuItem Option2 = new JMenuItem("Option2");
+		Option2.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e1) {
+				setOverlay("src/Resources/JaredOverlay.png");
+		        Timer timer = new Timer(1000, new ActionListener(){
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+							playSound("src/Resources/ZeldaTheme.wav");
+						}});
+				};
+		});
 		/*TODO/*
 		preferences.addActionListener(new ActionListener(){
 
@@ -86,8 +89,6 @@ public class TheNakedBotWindow extends JFrame{
 			}});
 		settings.setMnemonic('s');
 		////////////////////////////////////////////////////////////////*/
-		
-		settings.add(preferences);
 		about.addActionListener(new ActionListener(){
 
 			@Override
@@ -123,13 +124,13 @@ public class TheNakedBotWindow extends JFrame{
 			}});
 		
 		
-		
+		add.add(Option1);
+		add.add(Option2);
+		File.add(add);
+		settings.add(preferences);
 		settings.add(about);
-		
 		Menu.add(File);
 		Menu.add(settings);
-		
-		
 		setJMenuBar(Menu);
 		
 	////////////////////////////////PANEL STUFF////////////////////////////////
@@ -148,6 +149,17 @@ public class TheNakedBotWindow extends JFrame{
 		System.setProperty("awt.useSystemAAFontSettings","on");
 		System.setProperty("swing.aatext", "true");
 		TheNakedBotWindow window = new TheNakedBotWindow();
+		/*TheNakedBot bot = new TheNakedBot();
+    	Scanner scanner = new Scanner(System.in);
+    	
+        bot.setVerbose(true);        
+        try {
+			bot.connect("irc.twitch.tv",6667,"oauth:470lgpmgm914vf85gw5z4s84ot0ik4");
+		} catch (IOException | IrcException e1) {e1.printStackTrace();}   
+        bot.joinChannel("#thenakedpuppet");
+        if(scanner.hasNext("dc")){scanner.close(); bot.disconnect(); System.exit(0);}
+        */
+        
 		window.setVisible(true);
 	}
 	
@@ -155,6 +167,16 @@ public class TheNakedBotWindow extends JFrame{
 	
 	
 	/////////////////////////////////////////////STATIC METHODS/////////////////////////////////////
+	public static void setOverlay(String message) {
+		switch(message.toLowerCase()){
+		case "!overlay murica": writeImage("src/Resources/JaredOverlayAmerica.png","src/Resources/target.png");
+								break;
+		case "!overlay default": writeImage("src/Resources/JaredOverlay.png","src/Resources/target.png");
+								break;
+		default : writeImage(message,"src/Resources/target.png"); 
+		}		
+	}
+	
 	public static void openWebpage(String url) {
 		try 
         {
@@ -187,12 +209,13 @@ public class TheNakedBotWindow extends JFrame{
 	
 	}
 	
-	 public static synchronized void playSound(final File file) {
+	 public static synchronized void playSound(final String url) {
+		 File file = new File (url);
 	        new Thread(new Runnable() {
 	            public void run() {
 	                try {
 	                    Clip clip = AudioSystem.getClip();
-	                    AudioInputStream inputStream = AudioSystem.getAudioInputStream(file);
+	                    AudioInputStream inputStream = AudioSystem.getAudioInputStream(file);                  
 	                    clip.open(inputStream);
 	                    clip.start();
 	                } catch (Exception e) {

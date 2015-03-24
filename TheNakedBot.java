@@ -1,14 +1,18 @@
 import org.jibble.pircbot.*;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
+
+import javax.swing.Timer;
 
 
 public class TheNakedBot extends PircBot{
     
     public TheNakedBot() {
-        this.setName("thenakedbot");
+        this.setName("thenakedpuppet");
     }
    
     public static void main(String[] args) throws Exception {
@@ -17,7 +21,7 @@ public class TheNakedBot extends PircBot{
     	Scanner scanner = new Scanner(System.in);
     	
         bot.setVerbose(true);        
-        bot.connect("irc.twitch.tv",6667,"oauth:guj8ors7kpbduldich3j10oswg7gf9");   
+        bot.connect("irc.twitch.tv",6667,"oauth:470lgpmgm914vf85gw5z4s84ot0ik4");   
         bot.joinChannel("#thenakedpuppet");
      
         
@@ -31,7 +35,40 @@ public class TheNakedBot extends PircBot{
         if (message.equalsIgnoreCase("!time")) {
             String time = new java.util.Date().toString();
             sendMessage(channel, sender + ": The time is now " + time);
+            
         }
+        
+        if (message.equalsIgnoreCase("!overlay murica")){
+        	TheNakedBotWindow.setOverlay(message);
+        	Timer timer = new Timer(1000, new ActionListener(){
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					TheNakedBotWindow.playSound("src/Resources/AMERICANEW.wav");
+				}});
+        	timer.setRepeats(false);
+        	timer.start();
+        	sendMessage(channel,sender + " is a real American");
+        }
+        
+        if (message.equalsIgnoreCase("!overlay default")){
+        	TheNakedBotWindow.setOverlay(message);
+        	Timer timer = new Timer(1000, new ActionListener(){
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					TheNakedBotWindow.playSound("src/Resources/ZeldaTheme.wav");
+				}});
+        	timer.setRepeats(false);
+        	timer.start();
+        	sendMessage(channel,sender + " has changed the overlay");
+        }
+        
+        if (message.equalsIgnoreCase("!PEEPEE")){
+        	TheNakedBotWindow.playSound("src/Resources/applause.wav");
+        	sendMessage(channel,sender + " has a big peepee");
+
+        }
+        
+        
         
         if(message.equalsIgnoreCase("!np") || message.equalsIgnoreCase("!song") || message.equalsIgnoreCase("!map")){
         	String content = null;
