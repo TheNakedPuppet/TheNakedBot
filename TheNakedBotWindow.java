@@ -6,6 +6,8 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -24,6 +26,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.Timer;
 
 
@@ -38,10 +41,38 @@ public class TheNakedBotWindow extends JFrame{
 		JMenuBar Menu = new JMenuBar();
 		JMenu File = new JMenu("File");
 		File.setMnemonic('f');
+		JMenu add = new JMenu("Add");
+		JMenuItem Option1 = new JMenuItem("Option1");
+		Option1.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(e.getSource() == Option1){
+					writeImage("src/Resources/JaredOverlayAmerica.png","src/Resources/target.png");
+				};
+			}
+			
+			
+		});
+		add.add(Option1);
+		JMenuItem Option2 = new JMenuItem("Option2");
+		Option2.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(e.getSource() == Option2){
+					writeImage("src/Resources/JaredOverlay.png","src/Resources/target.png");
+				};
+			}
+			
+			
+		});
+		add.add(Option2);
+		File.add(add);
 		
 		JMenu settings = new JMenu("Settings");
 		JMenuItem preferences = new JMenuItem("Preferences");
 		JMenuItem about = new JMenuItem("About");
+		
+		/*TODO/*
 		preferences.addActionListener(new ActionListener(){
 
 			@Override
@@ -54,6 +85,8 @@ public class TheNakedBotWindow extends JFrame{
 				
 			}});
 		settings.setMnemonic('s');
+		////////////////////////////////////////////////////////////////*/
+		
 		settings.add(preferences);
 		about.addActionListener(new ActionListener(){
 
@@ -64,14 +97,13 @@ public class TheNakedBotWindow extends JFrame{
 				aboutWindow.setLayout(new FlowLayout());
 				JButton donate = new JButton("");
 				 try {
-					    Image img = ImageIO.read(new File("src/paypal-donate-button.png"));
+					    Image img = ImageIO.read(new File("src/Resources/paypal-donate-button.png"));
 					    donate.setMargin(new Insets(0, 0, 0, 0));
 					    donate.setBackground(new Color(255,255,255));
 					    donate.setBorder(null);
 					    donate.setIcon(new ImageIcon(img));
-					  } catch (IOException ex) {
-						  ex.printStackTrace();
-					 }
+					  } catch (IOException ex) { ex.printStackTrace(); }
+				 
 				donate.addActionListener(new ActionListener(){
 
 					@Override
@@ -122,7 +154,7 @@ public class TheNakedBotWindow extends JFrame{
 	
 	
 	
-	
+	/////////////////////////////////////////////STATIC METHODS/////////////////////////////////////
 	public static void openWebpage(String url) {
 		try 
         {
@@ -131,7 +163,29 @@ public class TheNakedBotWindow extends JFrame{
         catch (Exception e) {}
 	}
 	
+	public static Image loadImage(String url) throws IOException{
+		Image image = null;
+		image = ImageIO.read(new File(url));
+		return image;
+	}
 	
+	
+	
+	public static void writeImage(String url,String target) {
+	    BufferedImage bi = null;
+		try {
+			bi = (BufferedImage) loadImage(url);
+		} catch (IOException e) {e.printStackTrace();}
+		System.out.println("Image Loaded");
+
+	    File outputfile = new File(target);
+		try {
+			ImageIO.write(bi, "png", outputfile);
+		} catch (IOException e) {e.printStackTrace();}
+		
+		System.out.println("Image Written");
+	
+	}
 	
 	 public static synchronized void playSound(final File file) {
 	        new Thread(new Runnable() {
@@ -149,6 +203,7 @@ public class TheNakedBotWindow extends JFrame{
 	        }).start();
 	}
 	
+	////////////////////////////////////GRAPHICS STUFF/////////////////////////////////////////////
 	class GraphicsPanel extends JPanel implements ActionListener { 
 		private static final long serialVersionUID = 1L;
 		Image image = null;
@@ -156,32 +211,33 @@ public class TheNakedBotWindow extends JFrame{
 		
 		
 		@Override protected void paintComponent(Graphics g) {
-			timer.setDelay(3600000);
-			timer.start();
+			
 			super.paintComponent(g);
-			float f=20.0f; // font size.
+			/*float f=20.0f; // font size.
 			   g.setFont(g.getFont().deriveFont(f));
 			g.setColor(new Color(0,255,0));
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 
 			g.setColor(new Color(255,0,0));
 			g.drawImage(image, 0, 0, this.getWidth(), this.getHeight(), null);
-			//g.drawString("THANKS FOR THE MONEY LOSER", 50, this.getHeight()/2);
+			*///g.drawString("THANKS FOR THE MONEY LOSER", 50, this.getHeight()/2);
 		}
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			/*
 			if(e.getSource() == timer){
 			File sound = new File("src/NEVERGIVEUP.wav");
 			playSound(sound);
 			try {
-				image = ImageIO.read(new File("src/Ear_Rape_Spider.png"));
+				image = loadImage("src/Ear_Rape_Spider.png");
 			} catch (IOException e1) {
 				e1.printStackTrace();
-			}
+			}*/
+
 			repaint();
+			
 			}
-		}
 		
 	}
 
