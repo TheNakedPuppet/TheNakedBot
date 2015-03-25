@@ -22,7 +22,7 @@ public class TheNakedBot extends PircBot{
     	
         bot.setVerbose(true);        
         bot.connect("irc.twitch.tv",6667,"oauth:470lgpmgm914vf85gw5z4s84ot0ik4");   
-        bot.joinChannel("#thenakedpuppet");
+        bot.joinChannel("#azerfrost");
      
         
         if(scanner.hasNext("dc")){scanner.close(); bot.disconnect(); System.exit(0);}
@@ -31,7 +31,7 @@ public class TheNakedBot extends PircBot{
     
     public void onMessage(String channel, String sender, String login, String hostname, String message) {
     	/*******************Normal Commands*****************/
-    	
+    	/*
         if (message.equalsIgnoreCase("!time")) {
             String time = new java.util.Date().toString();
             sendMessage(channel, sender + ": The time is now " + time);
@@ -68,12 +68,12 @@ public class TheNakedBot extends PircBot{
 
         }
         
-        
+        */
         
         if(message.equalsIgnoreCase("!np") || message.equalsIgnoreCase("!song") || message.equalsIgnoreCase("!map")){
         	String content = null;
             try (Scanner scanner = new Scanner(new File("src/np.txt")).useDelimiter("\\Z")) {
-                content = scanner.next();
+                content = ".me " + scanner.next();
                 scanner.close();
             } catch (FileNotFoundException e) {
 				e.printStackTrace();
@@ -86,14 +86,14 @@ public class TheNakedBot extends PircBot{
             sendMessage(channel,"Goodbye!");
         	disconnect();
         	System.exit(0);
-        }
-       
+        }}}
+       /*
         if (message.equalsIgnoreCase("!hug") || message.contains("sad")|| message.contains("sadder")|| message.contains("saddest")|| message.contains("cri")||message.contains("cry")||message.contains("depressed")){
         	String response = ".me hugs " + sender;
         	sendMessage(channel, response);
         }
         
-        /**************Dummy Commands***********/
+        /**************Dummy Commands***********//*
         
         if (message.equalsIgnoreCase("!skin")){
         	String response = "Thanks to Tobi/IAmAladdin for the god skin: http://puu.sh/exdNP/820102fd59.osk ";
@@ -130,4 +130,4 @@ public class TheNakedBot extends PircBot{
         	sendMessage(channel, response);
         }
     }
-}
+}*/
