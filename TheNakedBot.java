@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import javax.swing.Timer;
@@ -14,6 +15,7 @@ public class TheNakedBot extends PircBot{
     public TheNakedBot() {
         this.setName("thenakedpuppet");
     }
+    
    
     public static void main(String[] args) throws Exception {
         
@@ -22,12 +24,30 @@ public class TheNakedBot extends PircBot{
     	
         bot.setVerbose(true);        
         bot.connect("irc.twitch.tv",6667,"oauth:470lgpmgm914vf85gw5z4s84ot0ik4");   
-        bot.joinChannel("#azerfrost");
+        bot.joinChannel("#thenakedpuppet");
+        Channel TNP = new Channel("#thenakedpuppet");
      
         
         if(scanner.hasNext("dc")){scanner.close(); bot.disconnect(); System.exit(0);}
     }
-    
+    @Override
+    protected void onUserMode(String channel, String sourceNick,String sourceLogin, String sourceHostname,String recipient){
+    	super.onUserMode(channel, sourceNick, sourceLogin, sourceHostname, recipient);
+    	String modName;
+    	System.out.println(channel + " " + sourceNick + " " + sourceLogin + " " + sourceHostname + " " + recipient);
+    	if(recipient.contains("+o")){
+    		channel = recipient.substring(0, recipient.lastIndexOf(" +"));
+    		modName = recipient.substring(recipient.lastIndexOf(" ")+1, recipient.length());
+    		System.out.println("asdf " + modName + "---");
+    		Channel.addMod(channel,modName);
+    		
+    	};
+    	if(recipient.contains("-o")){
+    		modName = recipient.replace(channel+" -o ", " ");
+    		channel = recipient.substring(0, recipient.lastIndexOf(" -"));
+    		Channel.removeMod(channel,modName);
+    	};
+    }
     
     public void onMessage(String channel, String sender, String login, String hostname, String message) {
     	/*******************Normal Commands*****************/
@@ -86,19 +106,23 @@ public class TheNakedBot extends PircBot{
             sendMessage(channel,"Goodbye!");
         	disconnect();
         	System.exit(0);
-        }}}
+        }
+    
+
+
        /*
         if (message.equalsIgnoreCase("!hug") || message.contains("sad")|| message.contains("sadder")|| message.contains("saddest")|| message.contains("cri")||message.contains("cry")||message.contains("depressed")){
         	String response = ".me hugs " + sender;
         	sendMessage(channel, response);
         }
         
-        /**************Dummy Commands***********//*
+        /**************Dummy Commands***********/
         
-        if (message.equalsIgnoreCase("!skin")){
-        	String response = "Thanks to Tobi/IAmAladdin for the god skin: http://puu.sh/exdNP/820102fd59.osk ";
-        	sendMessage(channel, response);
-        }
+		if(message.equalsIgnoreCase("!skin") && Channel.isMod(channel,sender)){
+			String response = "Thanks to Tobi/IAmAladdin for the god skin: http://puu.sh/exdNP/820102fd59.osk ";
+			sendMessage(channel, response);
+		}
+        /*
         if (message.equalsIgnoreCase("!jesse")){
         	String response = "Fuck you other jesse DansGame";
         	sendMessage(channel, response);
@@ -128,6 +152,63 @@ public class TheNakedBot extends PircBot{
         if (message.equalsIgnoreCase("!res")){
         	String response = "Windowed 1600x900";
         	sendMessage(channel, response);
+        }*/}}
+        class Channel{
+        	//////////////////////////////////////////
+        	public static ArrayList<ArrayList<String>> ModListList = new ArrayList<ArrayList<String>>() ;
+        	public static ArrayList<String> ModList = new ArrayList<String>();
+			private String name;
+			
+			
+			//////////////////////////////////////////
+        	Channel(String Name){
+        		name = Name;
+        		ModList = new ArrayList<String>();
+        		ModList.add(name);
+        		ModListList.add(ModList);
+        	}      	       	       	
+        	
+        	public static void addMod(String channel, String modName){
+        		for(int i = 0; i<ModListList.size();i++){
+        			System.out.println(ModListList.get(i).get(0));
+        			System.out.println(channel);
+        			System.out.println(ModListList.get(i).get(0).equals(channel));
+        			if(ModListList.get(i).get(0).equals(channel)){
+        				System.out.println("Contains Chanel");
+        				if(ModListList.get(i).contains(modName)){
+        					System.out.println("Contains Mod already");
+                		}	
+        				else{
+        				ModListList.get(i).add(modName);
+    					System.out.print("Added mod " + modName);
+    					}
+        			}
+        		}	
+        	}
+        	
+        	public static void removeMod(String channel, String modName){
+        		for(int i = 0; i<ModListList.size();i++){
+        			if(ModListList.get(i).get(0).equals(channel)){
+        				if(ModListList.get(i).contains(modName)){
+        					ModListList.get(i).remove(modName);
+        					System.out.print("Removed mod " + modName);
+                		}	
+        			}
+        		}	
+        	}
+        	
+        	public static boolean isMod(String channel, String name){
+        		for(int i = 0; i<ModListList.size();i++){
+        			if(ModListList.get(i).get(0).equals(channel)){
+        				if(ModListList.get(i).contains(name)){
+        					return true;
+        				}
+        			}
+        		}  
+        		return false;
+        	}
+        	
+			public String getName() {
+				return name;
+			}
         }
-    }
-}*/

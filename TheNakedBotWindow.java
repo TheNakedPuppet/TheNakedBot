@@ -149,7 +149,8 @@ public class TheNakedBotWindow extends JFrame{
 		System.setProperty("awt.useSystemAAFontSettings","on");
 		System.setProperty("swing.aatext", "true");
 		TheNakedBotWindow window = new TheNakedBotWindow();
-		/*TheNakedBot bot = new TheNakedBot();
+		window.setVisible(true);
+		TheNakedBot bot = new TheNakedBot();
     	Scanner scanner = new Scanner(System.in);
     	
         bot.setVerbose(true);        
@@ -157,10 +158,10 @@ public class TheNakedBotWindow extends JFrame{
 			bot.connect("irc.twitch.tv",6667,"oauth:470lgpmgm914vf85gw5z4s84ot0ik4");
 		} catch (IOException | IrcException e1) {e1.printStackTrace();}   
         bot.joinChannel("#thenakedpuppet");
-        if(scanner.hasNext("dc")){scanner.close(); bot.disconnect(); System.exit(0);}
-        */
+        if(scanner.hasNext("dc")){bot.sendMessage("#thenakedpuppet","I'M DEAD"); scanner.close(); bot.disconnect(); System.exit(0);}
         
-		window.setVisible(true);
+       
+		
 	}
 	
 	
