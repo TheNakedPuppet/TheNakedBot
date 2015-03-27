@@ -307,29 +307,17 @@ public class TheNakedBotWindow extends JFrame{
 	class GraphicsPanel extends JPanel implements ActionListener { 
 		private static final long serialVersionUID = 1L;
 		Image image = null;
-		Timer timer = new Timer(3600000, this);
-
-
 		@Override protected void paintComponent(Graphics g) {
 
 			super.paintComponent(g);
-			/*float f=20.0f; // font size.
-			   g.setFont(g.getFont().deriveFont(f));
-			g.setColor(new Color(0,255,0));
-			g.fillRect(0, 0, this.getWidth(), this.getHeight());
-
-			g.setColor(new Color(255,0,0));
-			g.drawImage(image, 0, 0, this.getWidth(), this.getHeight(), null);
-			 *///g.drawString("THANKS FOR THE MONEY LOSER", 50, this.getHeight()/2);
 		}
+
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-
-
-			repaint();
-
+			
 		}
+
 
 	}
 
