@@ -4,95 +4,106 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 import javax.swing.Timer;
 
 
 public class TheNakedBot extends PircBot{
-    
+    /////////////////////////////CONSTRUCTOR///////////////////////////////
     public TheNakedBot() {
         this.setName("thenakedpuppet");
+        try {
+			connect("irc.twitch.tv",6667,"oauth:470lgpmgm914vf85gw5z4s84ot0ik4");
+		} catch (IOException | IrcException e) {
+			e.printStackTrace();
+		}  
+        joinChannel("#obduration");
+        Channel TNP = new Channel("#obduration");
+        setVerbose(true);               
     }
     
-   
+   /////////////////////////////MAIN//////////////////////////////////////
     public static void main(String[] args) throws Exception {
         
     	TheNakedBot bot = new TheNakedBot();
     	Scanner scanner = new Scanner(System.in);
-    	
-        bot.setVerbose(true);        
-        bot.connect("irc.twitch.tv",6667,"oauth:470lgpmgm914vf85gw5z4s84ot0ik4");   
-        bot.joinChannel("#thenakedpuppet");
-        Channel TNP = new Channel("#thenakedpuppet");
-     
-        
+  
         if(scanner.hasNext("dc")){scanner.close(); bot.disconnect(); System.exit(0);}
     }
+    
+    
+    ///////////////////////////EVENTS/////////////////////////////////////
     @Override
     protected void onUserMode(String channel, String sourceNick,String sourceLogin, String sourceHostname,String recipient){
     	super.onUserMode(channel, sourceNick, sourceLogin, sourceHostname, recipient);
     	String modName;
-    	System.out.println(channel + " " + sourceNick + " " + sourceLogin + " " + sourceHostname + " " + recipient);
     	if(recipient.contains("+o")){
     		channel = recipient.substring(0, recipient.lastIndexOf(" +"));
     		modName = recipient.substring(recipient.lastIndexOf(" ")+1, recipient.length());
-    		System.out.println("asdf " + modName + "---");
     		Channel.addMod(channel,modName);
     		
     	};
     	if(recipient.contains("-o")){
-    		modName = recipient.replace(channel+" -o ", " ");
     		channel = recipient.substring(0, recipient.lastIndexOf(" -"));
+    		modName = recipient.substring(recipient.lastIndexOf(" ")+1, recipient.length());
     		Channel.removeMod(channel,modName);
     	};
     }
     
+    
+    //////////////////////////////////////COMMANDS///////////////////////////////////////////
     public void onMessage(String channel, String sender, String login, String hostname, String message) {
     	/*******************Normal Commands*****************/
-    	/*
+    	
         if (message.equalsIgnoreCase("!time")) {
             String time = new java.util.Date().toString();
             sendMessage(channel, sender + ": The time is now " + time);
             
         }
         
-        if (message.equalsIgnoreCase("!overlay murica")){
+        if (message.equalsIgnoreCase("!overlay murica") && Channel.isMod(channel,sender)){
         	TheNakedBotWindow.setOverlay(message);
+        	
         	Timer timer = new Timer(1000, new ActionListener(){
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					TheNakedBotWindow.playSound("src/Resources/AMERICANEW.wav");
+					TheNakedBotWindow.playSound("Resources/Sounds/AMERICANEW.wav");
 				}});
         	timer.setRepeats(false);
         	timer.start();
+        	
         	sendMessage(channel,sender + " is a real American");
         }
         
-        if (message.equalsIgnoreCase("!overlay default")){
+        if (message.equalsIgnoreCase("!overlay default") && Channel.isMod(channel,sender)){
         	TheNakedBotWindow.setOverlay(message);
+        	
         	Timer timer = new Timer(1000, new ActionListener(){
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					TheNakedBotWindow.playSound("src/Resources/ZeldaTheme.wav");
+					TheNakedBotWindow.playSound("Resources/Sounds/ZeldaTheme.wav");
 				}});
         	timer.setRepeats(false);
         	timer.start();
+        	
         	sendMessage(channel,sender + " has changed the overlay");
         }
         
-        if (message.equalsIgnoreCase("!PEEPEE")){
-        	TheNakedBotWindow.playSound("src/Resources/applause.wav");
+        if (message.equalsIgnoreCase("!PEEPEE") && Channel.isMod(channel,sender)){
+        	TheNakedBotWindow.playSound("Resources/Sounds/applause.wav");
         	sendMessage(channel,sender + " has a big peepee");
-
         }
         
-        */
+        
         
         if(message.equalsIgnoreCase("!np") || message.equalsIgnoreCase("!song") || message.equalsIgnoreCase("!map")){
         	String content = null;
-            try (Scanner scanner = new Scanner(new File("src/np.txt")).useDelimiter("\\Z")) {
+            try (Scanner scanner = new Scanner(new File("Resources/NP/np.txt")).useDelimiter("\\Z")) {
                 content = ".me " + scanner.next();
                 scanner.close();
             } catch (FileNotFoundException e) {
@@ -101,16 +112,22 @@ public class TheNakedBot extends PircBot{
             sendMessage(channel,content);
             
         }
+        if(message.equalsIgnoreCase("!uptime")){
+			long timeElapsed = System.currentTimeMillis() - TheNakedBotWindow.startTime;
+			int seconds = (int)(timeElapsed / 1000);
+			int minutes = seconds / 60;
+			seconds -= minutes * 60;
+		    int hours = minutes / 60;
+		    minutes -= hours * 60;
+			sendMessage(channel, hours + " hours " + minutes + " minutes " + seconds + " seconds");
+		}
         
-        if(message.equalsIgnoreCase("!dc") || message.equalsIgnoreCase("!off") && sender.contains("thenakedpuppet")){
+        if(message.equalsIgnoreCase("!dc") || message.equalsIgnoreCase("!off") && Channel.isMod(channel,sender)){
             sendMessage(channel,"Goodbye!");
         	disconnect();
         	System.exit(0);
         }
-    
-
-
-       /*
+     
         if (message.equalsIgnoreCase("!hug") || message.contains("sad")|| message.contains("sadder")|| message.contains("saddest")|| message.contains("cri")||message.contains("cry")||message.contains("depressed")){
         	String response = ".me hugs " + sender;
         	sendMessage(channel, response);
@@ -118,17 +135,15 @@ public class TheNakedBot extends PircBot{
         
         /**************Dummy Commands***********/
         
-		if(message.equalsIgnoreCase("!skin") && Channel.isMod(channel,sender)){
+		if(message.equalsIgnoreCase("!skin")){
 			String response = "Thanks to Tobi/IAmAladdin for the god skin: http://puu.sh/exdNP/820102fd59.osk ";
 			sendMessage(channel, response);
 		}
-        /*
+        
         if (message.equalsIgnoreCase("!jesse")){
         	String response = "Fuck you other jesse DansGame";
         	sendMessage(channel, response);
-        }
-       
-        
+        }       
         if (message.equalsIgnoreCase("!keyboard")){
         	String response = "Ducky Shine 3 w/ Mx Browns Kreygasm";
         	sendMessage(channel, response);
@@ -152,9 +167,15 @@ public class TheNakedBot extends PircBot{
         if (message.equalsIgnoreCase("!res")){
         	String response = "Windowed 1600x900";
         	sendMessage(channel, response);
-        }*/}}
-        class Channel{
+        }}}
+
+
+
+		////////////////////////////////CHANNEL///////////////////////////////////
+        class Channel extends PircBot{
         	//////////////////////////////////////////
+        	public static ArrayList<ArrayList<String>> PointListList = new ArrayList<ArrayList<String>>();
+        	public static ArrayList<String> PointList = new ArrayList<String>();		;
         	public static ArrayList<ArrayList<String>> ModListList = new ArrayList<ArrayList<String>>() ;
         	public static ArrayList<String> ModList = new ArrayList<String>();
 			private String name;
@@ -165,22 +186,40 @@ public class TheNakedBot extends PircBot{
         		name = Name;
         		ModList = new ArrayList<String>();
         		ModList.add(name);
-        		ModListList.add(ModList);
+        		ModListList.add(ModList);     	
+        		Map<String,Integer> userList = new HashMap<String, Integer>();
+        		final Timer timer = new Timer(3000, new ActionListener(){
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						User[] users = getUsers(name);
+						
+						for(int i = 0;i<users.length;i++){
+						System.out.println(users[i].getNick());
+						if(userList.containsKey(users[i].getNick())){
+							userList.put(users[i].getNick(), userList.get(users[i].getNick())+1);
+							System.out.println(users[i].getNick() + " : " + userList.get(users[i].getNick()));
+						}
+						else {
+							userList.put(users[i].getNick(), 1);
+							System.out.println(users[i].getNick() + " : " + userList.get(users[i].getNick()));
+						}}	
+					}    			
+        		});
+        		timer.start();
+        	
         	}      	       	       	
         	
         	public static void addMod(String channel, String modName){
         		for(int i = 0; i<ModListList.size();i++){
-        			System.out.println(ModListList.get(i).get(0));
-        			System.out.println(channel);
-        			System.out.println(ModListList.get(i).get(0).equals(channel));
         			if(ModListList.get(i).get(0).equals(channel)){
-        				System.out.println("Contains Chanel");
         				if(ModListList.get(i).contains(modName)){
-        					System.out.println("Contains Mod already");
+        					System.out.println(modName + " is already a mod");
+        					break;
                 		}	
         				else{
         				ModListList.get(i).add(modName);
-    					System.out.print("Added mod " + modName);
+    					System.out.println("Added mod " + modName);
+    					break;
     					}
         			}
         		}	
@@ -191,7 +230,8 @@ public class TheNakedBot extends PircBot{
         			if(ModListList.get(i).get(0).equals(channel)){
         				if(ModListList.get(i).contains(modName)){
         					ModListList.get(i).remove(modName);
-        					System.out.print("Removed mod " + modName);
+        					System.out.println("Removed mod " + modName);
+        					break;
                 		}	
         			}
         		}	
@@ -207,8 +247,4 @@ public class TheNakedBot extends PircBot{
         		}  
         		return false;
         	}
-        	
-			public String getName() {
-				return name;
-			}
         }
