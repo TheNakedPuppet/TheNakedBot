@@ -8,7 +8,6 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -16,8 +15,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioInputStream;
@@ -31,8 +33,11 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.Timer;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableModel;
 
 
 public class TheNakedBotWindow extends JFrame{
@@ -42,15 +47,39 @@ public class TheNakedBotWindow extends JFrame{
 	static Properties properties = new Properties();
 	static String overlayFolder;
 	static String soundFolder;
+	static String botName;
+	static String oauth;
+	static String a;
+	
+	
+	
 
+	public static void main(String[] args) {
+
+		System.setProperty("awt.useSystemAAFontSettings","on");
+		System.setProperty("swing.aatext", "true");
+		TheNakedBotWindow window = new TheNakedBotWindow();
+		window.setVisible(true);
+		TheNakedBot bot = new TheNakedBot();
+		Scanner scanner = new Scanner(System.in); 
+		if(scanner.hasNext("dc")){System.exit(0);;}	
+	}
+	
 	TheNakedBotWindow(){
+		
 		if(!new File("config.properties").exists()){
-		setPropertyValue("overlayFolder","Resources/Overlays/");
-		setPropertyValue("soundFolder","Resources/Sounds/");}
+			setPropertyValue("overlayFolder","Resources/Overlays/");
+			setPropertyValue("soundFolder","Resources/Sounds/");
+			setPropertyValue("botName","Enter Bot Name");
+			setPropertyValue("oauth","Enter Bot's oauth (From http://waa.ai/Iq6)");
+		}
 		overlayFolder = getPropertyValue("overlayFolder");
 		soundFolder = getPropertyValue("soundFolder");
+		botName = getPropertyValue("botName");
+		oauth = getPropertyValue("oauth");
 		////////////////////////////////MENU STUFF//////////////////////////////////
-		///////////////               ///////////////             	 /////////////// 		
+		///////////////               ///////////////             	 /////////////// 
+		setLayout(new FlowLayout());
 		JMenuBar Menu = new JMenuBar();
 		JMenu File = new JMenu("File");
 		File.setMnemonic('f');
@@ -64,11 +93,95 @@ public class TheNakedBotWindow extends JFrame{
 		JPanel overlaysPanel = new JPanel();
 		JTextField overlays = new JTextField(overlayFolder,15);
 		JButton saveButton1 = new JButton("Save");
-		
+
 		JPanel soundsPanel = new JPanel();
 		JTextField sounds = new JTextField(soundFolder,15);
 		JButton saveButton2 = new JButton("Save");
+
+		JPanel botNamePanel = new JPanel();
+		JTextField botNameField = new JTextField(botName,15);
+		JButton saveButton3 = new JButton("Save");
+
+		JPanel oauthPanel = new JPanel();
+		JTextField oauthField = new JTextField(oauth,15);
+		JButton saveButton4 = new JButton("Save");
 		
+		preferencesWindow.setLayout(new GridLayout(7,1));
+		overlaysPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		overlaysPanel.add(new JLabel("  Overlays:"));
+		overlaysPanel.add(overlays);
+		overlaysPanel.add(saveButton1);
+
+		soundsPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		soundsPanel.add(new JLabel("  Sounds:  "));
+		soundsPanel.add(sounds);
+		soundsPanel.add(saveButton2);
+
+		botNamePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		botNamePanel.add(new JLabel("  Bot Name:  "));
+		botNamePanel.add(botNameField);
+		botNamePanel.add(saveButton3);
+
+		oauthPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		oauthPanel.add(new JLabel("  Bot OAuth:  "));
+		oauthPanel.add(oauthField);
+		oauthPanel.add(saveButton4);
+
+		preferencesWindow.add(new JLabel(" File Paths: "));
+		preferencesWindow.add(overlaysPanel);
+		preferencesWindow.add(soundsPanel);
+		preferencesWindow.add(botNamePanel);
+		preferencesWindow.add(oauthPanel);
+
+		preferencesWindow.setResizable(false);
+		preferencesWindow.setSize(400,300);
+		preferencesWindow.setLocationRelativeTo(getParent());
+		saveButton1.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				setPropertyValue("overlayFolder",overlays.getText());
+				overlays.setText(overlays.getText());
+			}
+
+		});
+		saveButton2.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				setPropertyValue("soundFolder",sounds.getText());
+				sounds.setText(sounds.getText());
+			}	
+		});
+		saveButton3.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				setPropertyValue("botName",botNameField.getText());
+				botNameField.setText(botNameField.getText());
+			}	
+		});
+		saveButton4.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				setPropertyValue("oauth",oauthField.getText());
+				oauthField.setText(oauthField.getText());
+			}	
+		});
+		preferences.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				if(arg0.getSource() == preferences){
+					preferencesWindow.setVisible(true);
+				}	
+			}
+		});
+		//////////////////////////////////////////////////////////////////
+		settings.setMnemonic('s');
+		////////////////////////////////////////////////////////////////*/
+
 		Option1.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {	
@@ -78,6 +191,9 @@ public class TheNakedBotWindow extends JFrame{
 					public void actionPerformed(ActionEvent arg0) {
 						playSound(soundFolder + "AMERICANEW.wav");
 					}});
+				timer.setRepeats(false);
+				timer.start();
+				
 			};
 		});
 
@@ -92,55 +208,11 @@ public class TheNakedBotWindow extends JFrame{
 					public void actionPerformed(ActionEvent arg0) {
 						playSound(soundFolder + "ZeldaTheme.wav");
 					}});
+				timer.setRepeats(false);
+				timer.start();
 			};
 		});
-		
-		preferencesWindow.setLayout(new GridLayout(7,1));
-		overlaysPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-		overlaysPanel.add(new JLabel("  Overlays:"));
-		overlaysPanel.add(overlays);
-		overlaysPanel.add(saveButton1);
-		
-		soundsPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-		soundsPanel.add(new JLabel("  Sounds:  "));
-		soundsPanel.add(sounds);
-		soundsPanel.add(saveButton2);
-		preferencesWindow.add(new JLabel(" File Paths: "));
-		preferencesWindow.add(overlaysPanel);
-		preferencesWindow.add(soundsPanel);
-		
-		preferencesWindow.setResizable(false);
-		preferencesWindow.setSize(400,300);
-		preferencesWindow.setLocationRelativeTo(getParent());
-		saveButton1.addActionListener(new ActionListener(){
 
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				setPropertyValue("overlayFolder",overlays.getText());
-				overlays.setText(overlays.getText());
-			}
-			
-		});
-		saveButton2.addActionListener(new ActionListener(){
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				setPropertyValue("soundFolder",sounds.getText());
-				sounds.setText(sounds.getText());
-			}	
-		});
-		preferences.addActionListener(new ActionListener(){
-			
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				if(arg0.getSource() == preferences){
-					preferencesWindow.setVisible(true);
-				}	
-			}
-		});
-		//////////////////////////////////////////////////////////////////
-		settings.setMnemonic('s');
-		////////////////////////////////////////////////////////////////*/
 		about.addActionListener(new ActionListener(){
 
 			@Override
@@ -198,23 +270,11 @@ public class TheNakedBotWindow extends JFrame{
 
 	}
 
-	public static void main(String[] args) {
-
-		System.setProperty("awt.useSystemAAFontSettings","on");
-		System.setProperty("swing.aatext", "true");
-		TheNakedBotWindow window = new TheNakedBotWindow();
-		window.setVisible(true);
-		TheNakedBot bot = new TheNakedBot();
-		Scanner scanner = new Scanner(System.in); 
-		if(scanner.hasNext("dc")){bot.sendMessage("#thenakedpuppet","I'M DEAD"); scanner.close(); bot.disconnect(); System.exit(0);}	
-	}
-
 	public static void setPropertyValue(String property, String value){
 		OutputStream output = null;
 		try {
 			output = new FileOutputStream("config.properties");
 			properties.setProperty(property, value);
-
 			properties.store(output, null);
 			System.out.println("Set Property " + property + " to value:" + properties.getProperty(property));
 
@@ -263,7 +323,7 @@ public class TheNakedBotWindow extends JFrame{
 		}           
 		catch (Exception e) {}
 	}
-	
+
 	public static Image loadImage(String url) throws IOException{
 		Image image = null;
 		image = ImageIO.read(new File(url));
@@ -302,7 +362,7 @@ public class TheNakedBotWindow extends JFrame{
 			}
 		}).start();
 	}
-	
+
 	////////////////////////////////////GRAPHICS STUFF/////////////////////////////////////////////
 	class GraphicsPanel extends JPanel implements ActionListener { 
 		private static final long serialVersionUID = 1L;
@@ -315,10 +375,8 @@ public class TheNakedBotWindow extends JFrame{
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			
+
 		}
-
-
 	}
 
 }
