@@ -3,8 +3,12 @@ import org.jibble.pircbot.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,10 +25,11 @@ public class TheNakedBot extends PircBot{
 	/////////////////////////////CONSTRUCTOR///////////////////////////////
 	boolean canRespond = true;
 	ArrayList<String> ModList = new ArrayList<String>();
-	static Map<String,Integer> pointList = new HashMap<String, Integer>();
-	String Channel = "#dittochan";
+	static Map<String,Integer> pointListStatic= null;
+	static String Channel = TheNakedBotWindow.pointsChannel;
+	static String[] SpecialUsers = {"dittochan","obduration","iamcloudchaser","thenakedpuppet"};
 
-	int pointsInterval = 30000;
+	int pointsInterval = 60000;
 	public TheNakedBot() {
 		this.setName(TheNakedBotWindow.botName);
 		try {
@@ -32,11 +37,20 @@ public class TheNakedBot extends PircBot{
 		} catch (IOException | IrcException e) {
 			e.printStackTrace();
 		}  
+
 		joinChannel(Channel);
-		setVerbose(true);  
+		setVerbose(true); 
+		Map<String,Integer> pointListA = (HashMap<String,Integer>)deserializeObject();
+		if(deserializeObject()==null){
+			pointListA = new HashMap<String,Integer>();
+		}
+		Map<String,Integer> pointListOld = pointListA;
+		Map<String,Integer> pointListNew = new HashMap<String,Integer>();
+		Map<String,Integer> pointList = pointListOld;
 		Timer timer1 = new Timer(pointsInterval, new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
+				//Makes arraylist<String,Integer> (Our PoinList)from User array (Our User List). I forget how this works.
 				ArrayList<User>Users = new ArrayList<User>(Arrays.asList(getUsers(Channel)));
 				for(int i = 0;i<Users.size();i++){
 					if(pointList.containsKey(Users.get(i).getNick())){
@@ -47,18 +61,100 @@ public class TheNakedBot extends PircBot{
 						pointList.put(Users.get(i).getNick(), 1);
 						System.out.println("Added user " + Users.get(i).getNick());
 					}
+					pointListNew.putAll(pointList);
+					pointListNew.putAll(pointListOld);
 				}
+				//Saves new poinlist
+				serializeObject(pointListNew);
+				TheNakedBot.pointListStatic = pointListNew;
 				System.out.println(Channel + " suzuyabot points = " + getPoints(Channel, "suzuyabot"));
 			}}); 
-		timer1.start();
+		timer1.setInitialDelay(0);
+		timer1.start();}
 
-	}
+
 	/////////////////////////////MAIN//////////////////////////////////////
 	public static void main(String[] args) throws Exception {
 		TheNakedBot bot = new TheNakedBot();
 		Scanner scanner = new Scanner(System.in);
 		if(scanner.hasNext("dc")){scanner.close(); bot.disconnect(); System.exit(0);}
 	}
+	public void serializeObject(Object object){
+		try
+		{
+			FileOutputStream fileOut =
+					new FileOutputStream(TheNakedBotWindow.pointsDatabaseFolder + TheNakedBotWindow.pointsChannel + ".ser");
+			ObjectOutputStream out = new ObjectOutputStream(fileOut);
+			out.writeObject(object);
+			out.close();
+			fileOut.close();
+			System.out.println("Serialized data is saved in "+ TheNakedBotWindow.pointsDatabaseFolder + TheNakedBotWindow.pointsChannel + ".ser");
+		}catch(IOException i)
+		{
+			i.printStackTrace();
+		}
+	}
+
+	public Object deserializeObject(){
+		Object e = null;
+		try
+		{
+			FileInputStream fileIn = new FileInputStream(TheNakedBotWindow.pointsDatabaseFolder + TheNakedBotWindow.pointsChannel + ".ser");
+			ObjectInputStream in = new ObjectInputStream(fileIn);
+			e = in.readObject();
+			in.close();
+			fileIn.close();
+			return e;
+		}catch(IOException i)
+		{
+			i.printStackTrace();
+			return null;
+		}catch(ClassNotFoundException c)
+		{
+			System.out.println("Object was not found(?!?!?!?!)");
+			c.printStackTrace();
+			return null;
+		}
+	}
+
+	public void switchChannel(String channel){
+		partChannel(Channel);
+		joinChannel(channel);
+		Map<String,Integer> pointListA = (HashMap<String,Integer>)deserializeObject();
+		if(deserializeObject()==null){
+			pointListA = new HashMap<String,Integer>();
+		}
+		Map<String,Integer> pointListOld = pointListA;
+		Map<String,Integer> pointListNew = new HashMap<String,Integer>();
+		Map<String,Integer> pointList = pointListOld;
+		Timer timer1 = new Timer(pointsInterval, new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				//Makes arraylist<String,Integer> (Our PoinList)from User array (Our User List). I forget how this works.
+				ArrayList<User>Users = new ArrayList<User>(Arrays.asList(getUsers(Channel)));
+
+				pointList.putAll(pointListOld);
+				for(int i = 0;i<Users.size();i++){
+					if(pointList.containsKey(Users.get(i).getNick())){
+						pointList.put(Users.get(i).getNick(), pointList.get(Users.get(i).getNick())+1);
+						System.out.println(Channel + " Set user " + Users.get(i).getNick() + "'s total points to " +  pointList.get(Users.get(i).getNick()));
+					}
+					else{
+						pointList.put(Users.get(i).getNick(), 1);
+						System.out.println("Added user " + Users.get(i).getNick());
+					}
+					pointListNew.putAll(pointList);
+					pointListNew.putAll(pointListOld);
+				}
+				//Saves new poinlist
+				serializeObject(pointListNew);
+				TheNakedBot.pointListStatic = pointListNew;
+				System.out.println(Channel + " suzuyabot points = " + getPoints(Channel, "suzuyabot"));
+			}}); 
+		timer1.setInitialDelay(0);
+		timer1.start();
+	}
+
 
 	///////////////////////////EVENTS/////////////////////////////////////
 	@Override
@@ -80,7 +176,8 @@ public class TheNakedBot extends PircBot{
 
 	//////////////////////////////////////COMMANDS///////////////////////////////////////////
 	public void onMessage(String channel, String sender, String login, String hostname, String message) {
-		Timer timer = new Timer(30000,new ActionListener(){
+		TheNakedBotWindow.appendLog(sender+ ": " + message + "\n");
+		Timer timer = new Timer(5000,new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				canRespond = true;
@@ -93,7 +190,7 @@ public class TheNakedBot extends PircBot{
 		/*******************TIMED Commands******************/
 		/***************************************************/
 
-		if (message.equalsIgnoreCase("!overlay murica") && isMod(channel,sender) && canRespond){
+		if (message.equalsIgnoreCase("!overlay murica") && ( isMod(channel,sender) && canRespond) || isSpecialUser(sender)){
 			TheNakedBotWindow.setOverlay(message);
 
 			Timer timera = new Timer(1000, new ActionListener(){
@@ -108,10 +205,10 @@ public class TheNakedBot extends PircBot{
 			sendMessage(channel,sender + " is a real American");
 		}
 
-		if (message.equalsIgnoreCase("!overlay default") && isMod(channel,sender)&& canRespond){
+		if (message.equalsIgnoreCase("!overlay default") && ( isMod(channel,sender) && canRespond) || isSpecialUser(sender)){
 			TheNakedBotWindow.setOverlay(message);
 
-			Timer timer2 = new Timer(60000, new ActionListener(){
+			Timer timer2 = new Timer(1000, new ActionListener(){
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 					TheNakedBotWindow.playSound("Resources/Sounds/ZeldaTheme.wav");
@@ -123,14 +220,14 @@ public class TheNakedBot extends PircBot{
 			sendMessage(channel,sender + " has changed the overlay");
 		}
 
-		if (message.equalsIgnoreCase("!PEEPEE")&& canRespond){
+		if (message.equalsIgnoreCase("!PEEPEE") && canRespond){
 			int cost = 5;
-			if(getPoints(channel,sender) - cost >= 0){
+			if(getPoints(channel,sender) - cost >= 0 || isSpecialUser(sender)){
 				TheNakedBotWindow.playSound("Resources/Sounds/applause.wav");
 				sendMessage(channel,sender + " has a big peepee");
-				pointList.put(sender, pointList.get(sender)-cost);
+				pointListStatic.put(sender, pointListStatic.get(sender)-cost);
 
-			}else sendMessage(channel,"Sorry " + sender + ", you're short" + (cost - getPoints(channel,sender)) + " points for that command ;w;");			
+			}else sendMessage(channel,"Sorry " + sender + ", you're short " + (cost - getPoints(channel,sender)) + " points for that command ;w;");			
 			canRespond = false;
 			timer.restart();
 
@@ -149,7 +246,7 @@ public class TheNakedBot extends PircBot{
 			timer.restart();
 			sendMessage(channel,content);
 		}
-		if(message.equalsIgnoreCase("!uptime")&& canRespond){
+		if(message.equalsIgnoreCase("!uptime")&& canRespond ){
 			long timeElapsed = System.currentTimeMillis() - TheNakedBotWindow.startTime;
 			int seconds = (int)(timeElapsed / 1000);
 			int minutes = seconds / 60;
@@ -165,7 +262,7 @@ public class TheNakedBot extends PircBot{
 		/***************************************************/
 
 		if(message.equalsIgnoreCase("!points")) {
-			sendMessage(channel,sender + "points: " + Integer.toString(getPoints(channel,sender)));
+			sendMessage(channel,sender + " points: " + Integer.toString(getPoints(channel,sender)));
 		}
 		if (message.equalsIgnoreCase("!time")) {
 			String time = new java.util.Date().toString();
@@ -173,12 +270,12 @@ public class TheNakedBot extends PircBot{
 		}	
 		if(message.equalsIgnoreCase("!moist")) {
 			int cost = 2000;
-			if(pointList.get(sender) - cost >= 0){
+			if(pointListStatic.get(sender) - cost >= 0 || isSpecialUser(sender)){
 				sendMessage(channel,"AZOOOOOOOOSUUUUUUU");
 			}
-			else sendMessage(channel,"Sorry " + sender + ", you're short" + (cost - getPoints(channel,sender)) + " points for that command ;w;");	
+			else sendMessage(channel,"Sorry " + sender + ", you're short " + (cost - getPoints(channel,sender)) + " points for that command ;w;");	
 		}		
-		if(message.equalsIgnoreCase("!dc") || message.equalsIgnoreCase("!off") && isMod(channel,sender)){
+		if(message.equalsIgnoreCase("!dc") || message.equalsIgnoreCase("!off") && isMod(channel,sender) || isSpecialUser(sender)){
 			sendMessage(channel,"Goodbye!");
 			disconnect();
 			System.exit(0);
@@ -189,6 +286,7 @@ public class TheNakedBot extends PircBot{
 			String response = ".me hugs " + sender;
 			sendMessage(channel, response);
 		}
+
 		/***************************************************/
 		/*******************Dummy Commands******************/
 		/***************************************************/
@@ -225,7 +323,12 @@ public class TheNakedBot extends PircBot{
 		if (message.equalsIgnoreCase("!res")){
 			String response = "Windowed 1600x900";
 			sendMessage(channel, response);
-		}}
+		}
+		if (message.equalsIgnoreCase("!calvin")){
+			String response = "http://waa.ai/vvLj.jpg";
+			sendMessage(channel, response);
+		}
+	}
 
 	///////////////////////////CHANNEL STUFF//////////////////////////////
 
@@ -250,10 +353,19 @@ public class TheNakedBot extends PircBot{
 		}
 		return false;
 	}
+	public boolean isSpecialUser(String name){
+		for(int i=0;i<SpecialUsers.length;i++){
+			if(SpecialUsers[i] == name){
+				return true;
+			}}
+		return false;
+	}
 	public int getPoints(String channel, String user){
-		if(pointList.containsKey(user)){
-			return pointList.get(user);
-		}
-		return -1;
+		if(pointListStatic != null){
+			if(pointListStatic.containsKey(user)){
+				if(isSpecialUser(user)) return 9999;
+				else return pointListStatic.get(user);
+			}}
+		return 0;
 	}
 }
