@@ -80,7 +80,7 @@ public class TheNakedBotWindow extends JFrame{
 			setPropertyValue("overlayFolder","Resources/Overlays/");
 			setPropertyValue("soundFolder","Resources/Sounds/");
 			setPropertyValue("pointsDatabaseFolder","Resources/Points/");
-			setPropertyValue("pointsChannel","#thenakedpuppet");
+			setPropertyValue("pointsChannel","#forlorn_king");
 			setPropertyValue("botName","Enter Bot Name");
 			setPropertyValue("oauth","Enter Bot's oauth (From http://waa.ai/Iq6)");
 
@@ -99,6 +99,7 @@ public class TheNakedBotWindow extends JFrame{
 		JMenu File = new JMenu("File");
 		File.setMnemonic('f');
 		JMenu add = new JMenu("Add");
+		JMenuItem reconnect = new JMenuItem("Reconnect");
 		JMenuItem Option1 = new JMenuItem("Option1");
 		JMenu settings = new JMenu("Settings");
 		JMenuItem preferences = new JMenuItem("Preferences");
@@ -176,13 +177,10 @@ public class TheNakedBotWindow extends JFrame{
 				if(getPropertyValue("pointsChanel") != pointsChannelField.getText() && getPropertyValue("pointsChanel") != "#"+pointsChannelField.getText()){
 					if(getPropertyValue("pointsChannel") != pointsChannelField.getText() && pointsChannelField.getText().contains("#")){
 						setPropertyValue("pointsChannel",pointsChannelField.getText());
-						bot.switchChannel(pointsChannelField.getText());
-
 					}
 					else{
 						setPropertyValue("pointsChannel","#" + pointsChannelField.getText());
 						pointsChannelField.setText("#" + pointsChannelField.getText());
-						bot.switchChannel(pointsChannelField.getText());
 					}
 				}
 				setPropertyValue("botName",botNameField.getText());
@@ -233,7 +231,14 @@ public class TheNakedBotWindow extends JFrame{
 				timer.start();
 			};
 		});
+		reconnect.addActionListener(new ActionListener(){
 
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				bot.partChannel(pointsChannel);
+				bot.joinChannel(pointsChannel);
+			}		
+		});
 		about.addActionListener(new ActionListener(){
 
 			@Override
@@ -272,14 +277,13 @@ public class TheNakedBotWindow extends JFrame{
 		add.add(Option1);
 		add.add(Option2);
 		File.add(add);
+		File.addSeparator();
+		File.add(reconnect);
 		settings.add(preferences);
 		settings.add(about);
 		Menu.add(File);
 		Menu.add(settings);
 		setJMenuBar(Menu);
-		pack();
-		revalidate();
-		repaint();
 		////////////////////////////////WINDOW STUFF////////////////////////////////	
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLocationRelativeTo(null);
@@ -384,19 +388,5 @@ public class TheNakedBotWindow extends JFrame{
 	}
 
 	////////////////////////////////////GRAPHICS STUFF/////////////////////////////////////////////
-	class GraphicsPanel extends JPanel implements ActionListener { 
-		private static final long serialVersionUID = 1L;
-		Image image = null;
-		@Override protected void paintComponent(Graphics g) {
-
-			super.paintComponent(g);
-		}
-
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-
-		}
-	}
 
 }

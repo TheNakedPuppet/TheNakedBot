@@ -27,7 +27,7 @@ public class TheNakedBot extends PircBot{
 	ArrayList<String> ModList = new ArrayList<String>();
 	static Map<String,Integer> pointListStatic= null;
 	static String Channel = TheNakedBotWindow.pointsChannel;
-	static String[] SpecialUsers = {"dittochan","obduration","iamcloudchaser","thenakedpuppet"};
+	static String[] SpecialUsers = {"dittochan","obduration","iamcloudchaser","thenakedpuppet","suzuyabot"};
 
 	int pointsInterval = 60000;
 	public TheNakedBot() {
@@ -44,25 +44,31 @@ public class TheNakedBot extends PircBot{
 		if(deserializeObject()==null){
 			pointListA = new HashMap<String,Integer>();
 		}
-		Map<String,Integer> pointListOld = pointListA;
+
 		Map<String,Integer> pointListNew = new HashMap<String,Integer>();
-		Map<String,Integer> pointList = pointListOld;
+		Map<String,Integer> pointList = pointListA;
 		Timer timer1 = new Timer(pointsInterval, new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				//Makes arraylist<String,Integer> (Our PoinList)from User array (Our User List). I forget how this works.
+				//This is fucking disgusting
 				ArrayList<User>Users = new ArrayList<User>(Arrays.asList(getUsers(Channel)));
 				for(int i = 0;i<Users.size();i++){
 					if(pointList.containsKey(Users.get(i).getNick())){
-						pointList.put(Users.get(i).getNick(), pointList.get(Users.get(i).getNick())+1);
-						System.out.println(Channel + " Set user " + Users.get(i).getNick() + "'s total points to " +  pointList.get(Users.get(i).getNick()));
+						if(pointList.get(Users.get(i).getNick())<1000){
+							pointList.put(Users.get(i).getNick(), pointList.get(Users.get(i).getNick()) + pointList.get(Users.get(i).getNick())/100 + 1);
+							System.out.println(Channel + " Set user " + Users.get(i).getNick() + "'s total points to " +  pointList.get(Users.get(i).getNick()));
+						}
+						else{
+							pointList.put(Users.get(i).getNick(), pointList.get(Users.get(i).getNick()) + 10);
+							System.out.println(Channel + " Set user " + Users.get(i).getNick() + "'s total points to " +  pointList.get(Users.get(i).getNick()));
+						}
 					}
 					else{
 						pointList.put(Users.get(i).getNick(), 1);
 						System.out.println("Added user " + Users.get(i).getNick());
 					}
 					pointListNew.putAll(pointList);
-					pointListNew.putAll(pointListOld);
 				}
 				//Saves new poinlist
 				serializeObject(pointListNew);
@@ -116,46 +122,6 @@ public class TheNakedBot extends PircBot{
 			return null;
 		}
 	}
-
-	public void switchChannel(String channel){
-		partChannel(Channel);
-		joinChannel(channel);
-		Map<String,Integer> pointListA = (HashMap<String,Integer>)deserializeObject();
-		if(deserializeObject()==null){
-			pointListA = new HashMap<String,Integer>();
-		}
-		Map<String,Integer> pointListOld = pointListA;
-		Map<String,Integer> pointListNew = new HashMap<String,Integer>();
-		Map<String,Integer> pointList = pointListOld;
-		Timer timer1 = new Timer(pointsInterval, new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				//Makes arraylist<String,Integer> (Our PoinList)from User array (Our User List). I forget how this works.
-				ArrayList<User>Users = new ArrayList<User>(Arrays.asList(getUsers(Channel)));
-
-				pointList.putAll(pointListOld);
-				for(int i = 0;i<Users.size();i++){
-					if(pointList.containsKey(Users.get(i).getNick())){
-						pointList.put(Users.get(i).getNick(), pointList.get(Users.get(i).getNick())+1);
-						System.out.println(Channel + " Set user " + Users.get(i).getNick() + "'s total points to " +  pointList.get(Users.get(i).getNick()));
-					}
-					else{
-						pointList.put(Users.get(i).getNick(), 1);
-						System.out.println("Added user " + Users.get(i).getNick());
-					}
-					pointListNew.putAll(pointList);
-					pointListNew.putAll(pointListOld);
-				}
-				//Saves new poinlist
-				serializeObject(pointListNew);
-				TheNakedBot.pointListStatic = pointListNew;
-				System.out.println(Channel + " suzuyabot points = " + getPoints(Channel, "suzuyabot"));
-			}}); 
-		timer1.setInitialDelay(0);
-		timer1.start();
-	}
-
-
 	///////////////////////////EVENTS/////////////////////////////////////
 	@Override
 	protected void onUserMode(String channel, String sourceNick,String sourceLogin, String sourceHostname,String recipient){
@@ -190,7 +156,7 @@ public class TheNakedBot extends PircBot{
 		/*******************TIMED Commands******************/
 		/***************************************************/
 
-		if (message.equalsIgnoreCase("!overlay murica") && ( isMod(channel,sender) && canRespond) || isSpecialUser(sender)){
+		if (message.equalsIgnoreCase("!overlay murica") && (( isMod(channel,sender) && canRespond) || isSpecialUser(sender))){
 			TheNakedBotWindow.setOverlay(message);
 
 			Timer timera = new Timer(1000, new ActionListener(){
@@ -205,7 +171,7 @@ public class TheNakedBot extends PircBot{
 			sendMessage(channel,sender + " is a real American");
 		}
 
-		if (message.equalsIgnoreCase("!overlay default") && ( isMod(channel,sender) && canRespond) || isSpecialUser(sender)){
+		if (message.equalsIgnoreCase("!overlay default") && (( isMod(channel,sender) && canRespond) || isSpecialUser(sender))){
 			TheNakedBotWindow.setOverlay(message);
 
 			Timer timer2 = new Timer(1000, new ActionListener(){
@@ -270,12 +236,14 @@ public class TheNakedBot extends PircBot{
 		}	
 		if(message.equalsIgnoreCase("!moist")) {
 			int cost = 2000;
-			if(pointListStatic.get(sender) - cost >= 0 || isSpecialUser(sender)){
-				sendMessage(channel,"AZOOOOOOOOSUUUUUUU");
-			}
-			else sendMessage(channel,"Sorry " + sender + ", you're short " + (cost - getPoints(channel,sender)) + " points for that command ;w;");	
-		}		
-		if(message.equalsIgnoreCase("!dc") || message.equalsIgnoreCase("!off") && isMod(channel,sender) || isSpecialUser(sender)){
+			if(pointListStatic.get(sender)!=null){
+				if(pointListStatic.get(sender) - cost >= 0 || isSpecialUser(sender)){
+					sendMessage(channel,"AZOOOOOOOOSUUUUUUU");
+				}
+				else sendMessage(channel,"Sorry " + sender + ", you're short " + (cost - getPoints(channel,sender)) + " points for that command ;w;");	
+			}else System.out.println("pointListStatic.get(" + sender + ") Is null");
+		}
+		if((message.equalsIgnoreCase("!dc") || message.equalsIgnoreCase("!off")) && (isMod(channel,sender) || isSpecialUser(sender))){
 			sendMessage(channel,"Goodbye!");
 			disconnect();
 			System.exit(0);
@@ -355,9 +323,11 @@ public class TheNakedBot extends PircBot{
 	}
 	public boolean isSpecialUser(String name){
 		for(int i=0;i<SpecialUsers.length;i++){
-			if(SpecialUsers[i] == name){
+			if(SpecialUsers[i].contains(name)){
+				System.out.println(name + " is a special user");
 				return true;
 			}}
+		System.out.println(name + " is NOT a special user");
 		return false;
 	}
 	public int getPoints(String channel, String user){
