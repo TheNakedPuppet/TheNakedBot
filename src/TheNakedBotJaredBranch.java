@@ -9,7 +9,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -22,33 +21,39 @@ import javax.swing.Timer;
 import javax.swing.table.DefaultTableModel;
 
 
-public class TheNakedBot extends PircBot{
+public class TheNakedBotJaredBranch extends PircBot{
 	/////////////////////////////CONSTRUCTOR///////////////////////////////
 	boolean canRespond = true;
 	ArrayList<String> ModList = new ArrayList<String>();
 	static Map<String,Integer> pointListStatic= null;
-	static String Channel = TheNakedBotWindow.pointsChannel;
+	static String Channel = TheNakedBotWindowJaredBranch.pointsChannel;
 	static String[] SpecialUsers = {"dittochan","obduration","iamcloudchaser","thenakedpuppet","suzuyabot"};
-	static File linksFile = new File("Resources/Links.txt");
+	Map<Integer,String> links = new HashMap<Integer,String>();
 	int pointsInterval = 60000;
-	public TheNakedBot() {
-
+	public TheNakedBotJaredBranch() {
+		
 		/////TEMP ///////////
-
-		this.setName(TheNakedBotWindow.botName);
+		
+		links.put(1, "i.imgur.com/OXmRjTm.jpg");
+		links.put(2, "i.imgur.com/qbirAvE.jpg");
+		links.put(3, "i.imgur.com/0DtSdRl.jpg");
+		links.put(4, "i.imgur.com/0DtSdRl.jpg");
+		serializeObject(links,"links.ser");
+		
+		this.setName(TheNakedBotWindowJaredBranch.botName);
 		try {
-			connect("irc.twitch.tv",6667,TheNakedBotWindow.oauth);
+			connect("irc.twitch.tv",6667,TheNakedBotWindowJaredBranch.oauth);
 		} catch (IOException | IrcException e) {
 			e.printStackTrace();
 		}  
 
 		joinChannel(Channel);
 		setVerbose(true); 
-
-
+		
+		
 		@SuppressWarnings("unchecked")
-		Map<String,Integer> pointListA = (HashMap<String,Integer>)deserializeObject(TheNakedBotWindow.pointsDatabaseFolder + TheNakedBotWindow.pointsChannel + ".ser");
-		if(deserializeObject(TheNakedBotWindow.pointsDatabaseFolder + TheNakedBotWindow.pointsChannel + ".ser")==null){
+		Map<String,Integer> pointListA = (HashMap<String,Integer>)deserializeObject(TheNakedBotWindowJaredBranch.pointsDatabaseFolder + TheNakedBotWindowJaredBranch.pointsChannel + ".ser");
+		if(deserializeObject(TheNakedBotWindowJaredBranch.pointsDatabaseFolder + TheNakedBotWindowJaredBranch.pointsChannel + ".ser")==null){
 			pointListA = new HashMap<String,Integer>();
 		}
 
@@ -78,8 +83,8 @@ public class TheNakedBot extends PircBot{
 					pointListNew.putAll(pointList);
 				}
 				//Saves new poinlist
-				serializeObject(pointListNew,TheNakedBotWindow.pointsDatabaseFolder + TheNakedBotWindow.pointsChannel + ".ser");
-				TheNakedBot.pointListStatic = pointListNew;
+				serializeObject(pointListNew,TheNakedBotWindowJaredBranch.pointsDatabaseFolder + TheNakedBotWindowJaredBranch.pointsChannel + ".ser");
+				TheNakedBotJaredBranch.pointListStatic = pointListNew;
 				System.out.println(Channel + " suzuyabot points = " + getPoints(Channel, "suzuyabot"));
 			}}); 
 		timer1.setInitialDelay(0);
@@ -88,11 +93,11 @@ public class TheNakedBot extends PircBot{
 
 	/////////////////////////////MAIN//////////////////////////////////////
 	public static void main(String[] args) throws Exception {
-		TheNakedBot bot = new TheNakedBot();
+		TheNakedBotJaredBranch bot = new TheNakedBotJaredBranch();
 		Scanner scanner = new Scanner(System.in);
 		if(scanner.hasNext("dc")){scanner.close(); bot.disconnect(); System.exit(0);}
 	}
-
+	
 	///////////////////////////EVENTS/////////////////////////////////////
 	@Override
 	protected void onUserMode(String channel, String sourceNick,String sourceLogin, String sourceHostname,String recipient){
@@ -113,7 +118,7 @@ public class TheNakedBot extends PircBot{
 
 	//////////////////////////////////////COMMANDS///////////////////////////////////////////
 	public void onMessage(String channel, String sender, String login, String hostname, String message) {
-		TheNakedBotWindow.appendLog(sender+ ": " + message + "\n");
+		TheNakedBotWindowJaredBranch.appendLog(sender+ ": " + message + "\n");
 		Timer timer = new Timer(5000,new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -128,12 +133,12 @@ public class TheNakedBot extends PircBot{
 		/***************************************************/
 
 		if (message.equalsIgnoreCase("!overlay murica") && (( isMod(channel,sender) && canRespond) || isSpecialUser(sender))){
-			TheNakedBotWindow.setOverlay(message);
+			TheNakedBotWindowJaredBranch.setOverlay(message);
 
 			Timer timera = new Timer(1000, new ActionListener(){
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					TheNakedBotWindow.playSound("Resources/Sounds/AMERICANEW.wav");
+					TheNakedBotWindowJaredBranch.playSound("Resources/Sounds/AMERICANEW.wav");
 				}});
 			timera.setRepeats(false);
 			timera.start();
@@ -143,12 +148,12 @@ public class TheNakedBot extends PircBot{
 		}
 
 		if (message.equalsIgnoreCase("!overlay default") && (( isMod(channel,sender) && canRespond) || isSpecialUser(sender))){
-			TheNakedBotWindow.setOverlay(message);
+			TheNakedBotWindowJaredBranch.setOverlay(message);
 
 			Timer timer2 = new Timer(1000, new ActionListener(){
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					TheNakedBotWindow.playSound("Resources/Sounds/ZeldaTheme.wav");
+					TheNakedBotWindowJaredBranch.playSound("Resources/Sounds/ZeldaTheme.wav");
 				}});
 			timer2.setRepeats(false);
 			timer2.start();
@@ -160,7 +165,7 @@ public class TheNakedBot extends PircBot{
 		if (message.equalsIgnoreCase("!PEEPEE") && canRespond){
 			int cost = 5;
 			if(getPoints(channel,sender) - cost >= 0 || isSpecialUser(sender)){
-				TheNakedBotWindow.playSound("Resources/Sounds/applause.wav");
+				TheNakedBotWindowJaredBranch.playSound("Resources/Sounds/applause.wav");
 				sendMessage(channel,sender + " has a big peepee");
 				pointListStatic.put(sender, pointListStatic.get(sender)-cost);
 
@@ -184,7 +189,7 @@ public class TheNakedBot extends PircBot{
 			sendMessage(channel,content);
 		}
 		if(message.equalsIgnoreCase("!uptime")&& canRespond ){
-			long timeElapsed = System.currentTimeMillis() - TheNakedBotWindow.startTime;
+			long timeElapsed = System.currentTimeMillis() - TheNakedBotWindowJaredBranch.startTime;
 			int seconds = (int)(timeElapsed / 1000);
 			int minutes = seconds / 60;
 			seconds -= minutes * 60;
@@ -194,11 +199,13 @@ public class TheNakedBot extends PircBot{
 			canRespond = false;
 			timer.restart();
 		}	
-
+		
 		if (message.equalsIgnoreCase("!healthy") && canRespond){
 			int cost = 5;
 			if(getPoints(channel,sender) - cost >= 0 || isSpecialUser(sender)){
-				sendMessage(channel,getRandomLine(linksFile));
+				Map<Integer,String> temp = (Map<Integer, String>) deserializeObject("links.ser");
+				int seed = (int) (Math.random()*4+1);
+				sendMessage(channel,"#" + seed + " " +  temp.get(seed));
 				pointListStatic.put(sender, pointListStatic.get(sender)-cost);
 
 			}else sendMessage(channel,"Sorry " + sender + ", you're short " + (cost - getPoints(channel,sender)) + " points for that command ;w;");			
@@ -321,7 +328,7 @@ public class TheNakedBot extends PircBot{
 			}}
 		return 0;
 	}
-
+	
 	public void serializeObject(Object object,String file){
 		try
 		{
@@ -358,32 +365,5 @@ public class TheNakedBot extends PircBot{
 			c.printStackTrace();
 			return null;
 		}
-	}
-	public String getRandomLine(File file)
-	{
-		try {
-
-			Scanner scanner = new Scanner(file);
-
-			int numberOfLines = 0;
-			
-			while(scanner.hasNextLine()){
-				numberOfLines++;
-				scanner.nextLine();
-				System.out.println("number of lines: " + numberOfLines);
-			}	
-			System.out.println("number of lines: " + numberOfLines);
-			int seed = (int) (Math.random() * numberOfLines + 1);
-			System.out.println("seed: " + seed);
-			scanner = new Scanner(file);
-			for(int i=0;i<numberOfLines;i++){
-				if(i == seed-1){	
-					return scanner.nextLine();
-				}
-			scanner.nextLine();}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return "#1 licdn.awwni.me/npmp.jpg";
 	}
 }
