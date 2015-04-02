@@ -14,11 +14,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.Vector;
-
-import javax.swing.JTable;
 import javax.swing.Timer;
-import javax.swing.table.DefaultTableModel;
 
 
 public class TheNakedBotJaredBranch extends PircBot{

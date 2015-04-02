@@ -1,13 +1,13 @@
 import java.awt.Color;
 import java.awt.Desktop;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,12 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.util.Collection;
-import java.util.Map;
 import java.util.Properties;
-import java.util.Scanner;
-import java.util.Set;
-
 import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -34,13 +29,9 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.Timer;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableModel;
 
 
 public class TheNakedBotWindow extends JFrame{
@@ -50,6 +41,7 @@ public class TheNakedBotWindow extends JFrame{
 	static Properties properties = new Properties();
 	static String overlayFolder;
 	static String soundFolder;
+	static String linksFile = "Resources/Links.txt";
 	static String pointsDatabaseFolder;
 	static String pointsChannel;
 	static String botName;
@@ -58,20 +50,8 @@ public class TheNakedBotWindow extends JFrame{
 	static JTextArea chatLog = new JTextArea();
 
 	public static void main(String[] args) {
-
-		System.setProperty("awt.useSystemAAFontSettings","on");
-		System.setProperty("swing.aatext", "true");
 		TheNakedBotWindow window = new TheNakedBotWindow();
-		JScrollPane scrollPane = new JScrollPane();
-		chatLog.setEditable(false);
-		scrollPane.setPreferredSize(new Dimension(600,275));
-		scrollPane.add(chatLog);
-		scrollPane.setBounds(10, 11, 455, 249);
-		window.add(scrollPane);
-		window.pack();
-		Scanner scanner = new Scanner(System.in); 
-		window.setVisible(true);
-		if(scanner.hasNext("dc")){System.exit(0);}	
+		window.setVisible(true);  
 	}
 
 	TheNakedBotWindow(){
@@ -79,27 +59,50 @@ public class TheNakedBotWindow extends JFrame{
 		if(!new File("config.properties").exists()){
 			setPropertyValue("overlayFolder","Resources/Overlays/");
 			setPropertyValue("soundFolder","Resources/Sounds/");
+			setPropertyValue("linksFile","Resources/Links.txt");
 			setPropertyValue("pointsDatabaseFolder","Resources/Points/");
 			setPropertyValue("pointsChannel","#forlorn_king");
 			setPropertyValue("botName","Enter Bot Name");
 			setPropertyValue("oauth","Enter Bot's oauth (From http://waa.ai/Iq6)");
-
 		}
 		overlayFolder = getPropertyValue("overlayFolder");
 		soundFolder = getPropertyValue("soundFolder");
+		linksFile = getPropertyValue("linksFile");
 		pointsDatabaseFolder = getPropertyValue("pointsDatabaseFolder");;
-		pointsChannel = getPropertyValue("pointsChannel");;	
+		pointsChannel = getPropertyValue("pointsChannel");;    
 		botName = getPropertyValue("botName");
 		oauth = getPropertyValue("oauth");
+		
 		TheNakedBot bot = new TheNakedBot();
 		////////////////////////////////MENU STUFF//////////////////////////////////
-		///////////////               ///////////////             	 /////////////// 
-		
+		///////////////               ///////////////                    ///////////////
+		KeyListener ctrlWActionListener = new KeyListener(){
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if ((e.getKeyCode() == KeyEvent.VK_W) && ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)) {
+					System.exit(0);
+				}
+			}
+
+			@Override
+			public void keyReleased(KeyEvent arg0) {	
+			}
+
+			@Override
+			public void keyTyped(KeyEvent arg0) {	
+			}
+		};
+		this.addKeyListener(ctrlWActionListener);
+
+		FlowLayout fLayoutLeft = new FlowLayout(FlowLayout.LEFT);
 		JMenuBar Menu = new JMenuBar();
 		JMenu File = new JMenu("File");
 		File.setMnemonic('f');
+
 		JMenu add = new JMenu("Add");
 		JMenuItem reconnect = new JMenuItem("Reconnect");
+		JMenuItem exit = new JMenuItem("Exit");
 		JMenuItem Option1 = new JMenuItem("Option1");
 		JMenu settings = new JMenu("Settings");
 		JMenuItem preferences = new JMenuItem("Preferences");
@@ -107,23 +110,26 @@ public class TheNakedBotWindow extends JFrame{
 
 		JFrame preferencesWindow = new JFrame("Preferences");
 
-		JPanel overlaysPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JPanel overlaysPanel = new JPanel(fLayoutLeft);
 		JTextField overlays = new JTextField(overlayFolder,15);
 
-		JPanel soundsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JPanel soundsPanel = new JPanel(fLayoutLeft);
 		JTextField sounds = new JTextField(soundFolder,15);
+		
+		JPanel linksFilePanel = new JPanel(fLayoutLeft);
+		JTextField linksFileField = new JTextField(linksFile,15);
 
-		JPanel pointsDatabasePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JPanel pointsDatabasePanel = new JPanel(fLayoutLeft);
 		JTextField pointsDatabaseField = new JTextField(pointsDatabaseFolder,15);
 
-		JPanel pointsChannelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JPanel pointsChannelPanel = new JPanel(fLayoutLeft);
 		JTextField pointsChannelField = new JTextField(pointsChannel,15);
 
-		JPanel botNamePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JPanel botNamePanel = new JPanel(fLayoutLeft);
 		JTextField botNameField = new JTextField(botName,15);
 
 
-		JPanel oauthPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JPanel oauthPanel = new JPanel(fLayoutLeft);
 		JTextField oauthField = new JTextField(oauth,15);
 
 		JPanel saveButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -132,7 +138,7 @@ public class TheNakedBotWindow extends JFrame{
 		saveButtonPanel.add(save);
 
 
-		preferencesWindow.setLayout(new GridLayout(8,1));
+		preferencesWindow.setLayout(new GridLayout(9,1));
 
 		overlaysPanel.add(new JLabel("Overlays:"));
 		overlaysPanel.add(overlays);
@@ -140,6 +146,9 @@ public class TheNakedBotWindow extends JFrame{
 
 		soundsPanel.add(new JLabel("Sounds:  "));
 		soundsPanel.add(sounds);
+		
+		linksFilePanel.add(new JLabel("Links File: "));
+		linksFilePanel.add(linksFileField);
 
 		pointsDatabasePanel.add(new JLabel("Points Folder :"));
 		pointsDatabasePanel.add(pointsDatabaseField);
@@ -157,6 +166,7 @@ public class TheNakedBotWindow extends JFrame{
 		preferencesWindow.add(new JLabel(" File Paths: "));
 		preferencesWindow.add(overlaysPanel);
 		preferencesWindow.add(soundsPanel);
+		preferencesWindow.add(linksFilePanel);
 		preferencesWindow.add(pointsDatabasePanel);
 		preferencesWindow.add(pointsChannelPanel);
 		preferencesWindow.add(botNamePanel);
@@ -173,7 +183,8 @@ public class TheNakedBotWindow extends JFrame{
 			public void actionPerformed(ActionEvent arg0) {
 				setPropertyValue("overlayFolder",overlays.getText());
 				setPropertyValue("soundFolder",sounds.getText());
-				setPropertyValue("pointsDatabaseFolder",pointsDatabaseField.getText());			
+				setPropertyValue("linksFile",linksFileField.getText());
+				setPropertyValue("pointsDatabaseFolder",pointsDatabaseField.getText());                
 				if(getPropertyValue("pointsChanel") != pointsChannelField.getText() && getPropertyValue("pointsChanel") != "#"+pointsChannelField.getText()){
 					if(getPropertyValue("pointsChannel") != pointsChannelField.getText() && pointsChannelField.getText().contains("#")){
 						setPropertyValue("pointsChannel",pointsChannelField.getText());
@@ -195,7 +206,7 @@ public class TheNakedBotWindow extends JFrame{
 			public void actionPerformed(ActionEvent arg0) {
 				if(arg0.getSource() == preferences){
 					preferencesWindow.setVisible(true);
-				}	
+				}      
 			}
 		});
 		//////////////////////////////////////////////////////////////////
@@ -204,7 +215,7 @@ public class TheNakedBotWindow extends JFrame{
 
 		Option1.addActionListener(new ActionListener(){
 			@Override
-			public void actionPerformed(ActionEvent e) {	
+			public void actionPerformed(ActionEvent e) {   
 				setOverlay(overlayFolder + "JaredOverlayAmerica.png");
 				Timer timer = new Timer(1000, new ActionListener(){
 					@Override
@@ -226,7 +237,7 @@ public class TheNakedBotWindow extends JFrame{
 					@Override
 					public void actionPerformed(ActionEvent arg0) {
 						playSound(soundFolder + "ZeldaTheme.wav");
-					}}); 
+					}});
 				timer.setRepeats(false);
 				timer.start();
 			};
@@ -237,7 +248,14 @@ public class TheNakedBotWindow extends JFrame{
 			public void actionPerformed(ActionEvent e) {
 				bot.partChannel(pointsChannel);
 				bot.joinChannel(pointsChannel);
-			}		
+			}              
+		});
+		exit.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}              
 		});
 		about.addActionListener(new ActionListener(){
 
@@ -272,28 +290,30 @@ public class TheNakedBotWindow extends JFrame{
 				aboutWindow.add(donate);
 				aboutWindow.setVisible(true);
 				aboutWindow.setSize(300,225);
-				aboutWindow.setLocationRelativeTo(getParent());				
+				aboutWindow.setLocationRelativeTo(getParent());                        
 			}});
 		add.add(Option1);
 		add.add(Option2);
 		File.add(add);
 		File.addSeparator();
 		File.add(reconnect);
+		File.addSeparator();
+		File.add(exit);
 		settings.add(preferences);
 		settings.add(about);
 		Menu.add(File);
 		Menu.add(settings);
 		setJMenuBar(Menu);
-		////////////////////////////////WINDOW STUFF////////////////////////////////	
+		////////////////////////////////WINDOW STUFF////////////////////////////////   
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLocationRelativeTo(null);
-		setSize(640,360);	
+		setSize(640,360);      
 	}
 
 	public static void appendLog(String str){
 		chatLog.append(str);
 	}
-	
+
 	public static void setPropertyValue(String property, String value){
 		OutputStream output = null;
 		try {
@@ -322,6 +342,7 @@ public class TheNakedBotWindow extends JFrame{
 		try {
 			inputStream = new FileInputStream(propFileName);
 			properties.load(inputStream);
+			inputStream.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -336,15 +357,15 @@ public class TheNakedBotWindow extends JFrame{
 		break;
 		case "!overlay default": writeImage(overlayFolder + "JaredOverlay.png",overlayFolder + "target.png");
 		break;
-		default : writeImage(message,overlayFolder + "target.png"); 
-		}		
+		default : writeImage(message,overlayFolder + "target.png");
+		}              
 	}
 
 	public static void openWebpage(String url) {
-		try 
+		try
 		{
 			Desktop.getDesktop().browse(new URL(url).toURI());
-		}           
+		}          
 		catch (Exception e) {}
 	}
 
@@ -378,6 +399,7 @@ public class TheNakedBotWindow extends JFrame{
 					Clip clip = AudioSystem.getClip();
 					AudioInputStream inputStream = AudioSystem.getAudioInputStream(file);                  
 					clip.open(inputStream);
+					inputStream.close();
 					clip.start();
 				} catch (Exception e) {
 					e.printStackTrace();

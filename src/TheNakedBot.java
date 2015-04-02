@@ -9,32 +9,27 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.Vector;
-
-import javax.swing.JTable;
 import javax.swing.Timer;
-import javax.swing.table.DefaultTableModel;
 
 
 public class TheNakedBot extends PircBot{
 	/////////////////////////////CONSTRUCTOR///////////////////////////////
 	boolean canRespond = true;
 	ArrayList<String> ModList = new ArrayList<String>();
-	static Map<String,Integer> pointListStatic= null;
+	static Map<String,Integer> pointListStatic= (Map<String, Integer>) deserializeObject("Resources/Points/" + TheNakedBotWindow.pointsChannel + ".ser");
 	static String Channel = TheNakedBotWindow.pointsChannel;
-	static String[] SpecialUsers = {"dittochan","obduration","iamcloudchaser","thenakedpuppet","suzuyabot"};
-	static File linksFile = new File("Resources/Links.txt");
+	static String[] SpecialUsers = {"dittochan","obduration","iamcloudchaser","thenakedpuppet","suzuyabot","juicebox5401","e223","wieran1111","emralgreeny","elquilious","zognegnad102","zodiaack","aivycore"};
+	static int linksNumberOfLines = 0;
 	int pointsInterval = 60000;
 	public TheNakedBot() {
 
 		/////TEMP ///////////
-
+		
 		this.setName(TheNakedBotWindow.botName);
 		try {
 			connect("irc.twitch.tv",6667,TheNakedBotWindow.oauth);
@@ -43,8 +38,17 @@ public class TheNakedBot extends PircBot{
 		}  
 
 		joinChannel(Channel);
-		setVerbose(true); 
-
+		setVerbose(true);
+		try {
+			File linksFile1 = new File(TheNakedBotWindow.linksFile);
+			Scanner scanner = new Scanner(linksFile1);
+			linksNumberOfLines = 0;
+			while(scanner.hasNextLine()){
+				linksNumberOfLines++;
+				scanner.nextLine();
+			}
+			scanner.close();
+		} catch (FileNotFoundException e) {e.printStackTrace();}
 
 		@SuppressWarnings("unchecked")
 		Map<String,Integer> pointListA = (HashMap<String,Integer>)deserializeObject(TheNakedBotWindow.pointsDatabaseFolder + TheNakedBotWindow.pointsChannel + ".ser");
@@ -78,10 +82,11 @@ public class TheNakedBot extends PircBot{
 					pointListNew.putAll(pointList);
 				}
 				//Saves new poinlist
+				Users.clear();
 				serializeObject(pointListNew,TheNakedBotWindow.pointsDatabaseFolder + TheNakedBotWindow.pointsChannel + ".ser");
 				TheNakedBot.pointListStatic = pointListNew;
 				System.out.println(Channel + " suzuyabot points = " + getPoints(Channel, "suzuyabot"));
-			}}); 
+			}});
 		timer1.setInitialDelay(0);
 		timer1.start();}
 
@@ -118,7 +123,7 @@ public class TheNakedBot extends PircBot{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				canRespond = true;
-			}		
+			}              
 		});
 		timer.setRepeats(false);
 		timer.start();
@@ -158,13 +163,16 @@ public class TheNakedBot extends PircBot{
 		}
 
 		if (message.equalsIgnoreCase("!PEEPEE") && canRespond){
-			int cost = 5;
+			int cost = 0;
 			if(getPoints(channel,sender) - cost >= 0 || isSpecialUser(sender)){
 				TheNakedBotWindow.playSound("Resources/Sounds/applause.wav");
 				sendMessage(channel,sender + " has a big peepee");
-				pointListStatic.put(sender, pointListStatic.get(sender)-cost);
-
-			}else sendMessage(channel,"Sorry " + sender + ", you're short " + (cost - getPoints(channel,sender)) + " points for that command ;w;");			
+				try{
+					pointListStatic.put(sender, pointListStatic.get(sender)-cost);
+				}catch(NullPointerException e){
+					System.out.println("pointListStatic." + sender + "returned null :c");
+				}
+			}else sendMessage(channel,"Sorry " + sender + ", you're short " + (cost - getPoints(channel,sender)) + " points for that command ;w;");                
 			canRespond = false;
 			timer.restart();
 
@@ -174,7 +182,7 @@ public class TheNakedBot extends PircBot{
 		if(message.equalsIgnoreCase("!np") || message.equalsIgnoreCase("!song") || message.equalsIgnoreCase("!map")){
 			String content = null;
 			try (Scanner scanner = new Scanner(new File("Resources/NP/np.txt")).useDelimiter("\\Z")) {
-				content = ".me " + scanner.next();
+				content = ".me - " +scanner.next();
 				scanner.close();
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
@@ -193,15 +201,20 @@ public class TheNakedBot extends PircBot{
 			sendMessage(channel, hours + " hours " + minutes + " minutes " + seconds + " seconds");
 			canRespond = false;
 			timer.restart();
-		}	
+		}      
 
 		if (message.equalsIgnoreCase("!healthy") && canRespond){
-			int cost = 5;
+			int cost = 0;
 			if(getPoints(channel,sender) - cost >= 0 || isSpecialUser(sender)){
-				sendMessage(channel,getRandomLine(linksFile));
-				pointListStatic.put(sender, pointListStatic.get(sender)-cost);
+				sendMessage(channel,getRandomLine(new File(TheNakedBotWindow.linksFile),linksNumberOfLines));
+				try{
+					pointListStatic.put(sender, pointListStatic.get(sender)-cost);
+				}catch(NullPointerException e){
+					System.out.println("pointListStatic." + sender + "returned null :c");
+				}
 
-			}else sendMessage(channel,"Sorry " + sender + ", you're short " + (cost - getPoints(channel,sender)) + " points for that command ;w;");			
+
+			}else sendMessage(channel,"Sorry " + sender + ", you're short " + (cost - getPoints(channel,sender)) + " points for that command ;w;");                
 			canRespond = false;
 			timer.restart();
 
@@ -216,14 +229,14 @@ public class TheNakedBot extends PircBot{
 		if (message.equalsIgnoreCase("!time")) {
 			String time = new java.util.Date().toString();
 			sendMessage(channel, sender + ": The time is now " + time);
-		}	
+		}      
 		if(message.equalsIgnoreCase("!moist")) {
 			int cost = 2000;
 			if(pointListStatic.get(sender)!=null){
 				if(pointListStatic.get(sender) - cost >= 0 || isSpecialUser(sender)){
 					sendMessage(channel,"AZOOOOOOOOSUUUUUUU");
 				}
-				else sendMessage(channel,"Sorry " + sender + ", you're short " + (cost - getPoints(channel,sender)) + " points for that command ;w;");	
+				else sendMessage(channel,"Sorry " + sender + ", you're short " + (cost - getPoints(channel,sender)) + " points for that command ;w;"); 
 			}else System.out.println("pointListStatic.get(" + sender + ") Is null");
 		}
 		if((message.equalsIgnoreCase("!dc") || message.equalsIgnoreCase("!off")) && (isMod(channel,sender) || isSpecialUser(sender))){
@@ -250,7 +263,7 @@ public class TheNakedBot extends PircBot{
 		if (message.equalsIgnoreCase("!jesse")){
 			String response = "Fuck you other jesse DansGame";
 			sendMessage(channel, response);
-		}       
+		}      
 		if (message.equalsIgnoreCase("!keyboard")){
 			String response = "Ducky Shine 3 w/ Mx Browns Kreygasm";
 			sendMessage(channel, response);
@@ -286,7 +299,7 @@ public class TheNakedBot extends PircBot{
 	public void addMod(String channel, String modName){
 		if(ModList.contains(modName)){
 			System.out.println(modName + " is already a mod");
-		}	
+		}      
 		else{
 			ModList.add(modName);
 			System.out.println("Added mod " + modName);
@@ -296,7 +309,7 @@ public class TheNakedBot extends PircBot{
 		if(ModList.contains(modName)){
 			ModList.remove(modName);
 			System.out.println("Removed mod " + modName);
-		}	
+		}      
 	}
 	public boolean isMod(String channel, String name){
 		if(ModList.contains(name)){
@@ -338,7 +351,7 @@ public class TheNakedBot extends PircBot{
 		}
 	}
 
-	public Object deserializeObject(String file){
+	public static Object deserializeObject(String file){
 		Object e = null;
 		try
 		{
@@ -359,31 +372,26 @@ public class TheNakedBot extends PircBot{
 			return null;
 		}
 	}
-	public String getRandomLine(File file)
-	{
+	public String getRandomLine(File file,int numberOfLines)
+	{	
+		Scanner scanner = null;
 		try {
-
-			Scanner scanner = new Scanner(file);
-
-			int numberOfLines = 0;
-			
-			while(scanner.hasNextLine()){
-				numberOfLines++;
-				scanner.nextLine();
-				System.out.println("number of lines: " + numberOfLines);
-			}	
+			scanner = new Scanner(file);
 			System.out.println("number of lines: " + numberOfLines);
 			int seed = (int) (Math.random() * numberOfLines + 1);
 			System.out.println("seed: " + seed);
-			scanner = new Scanner(file);
 			for(int i=0;i<numberOfLines;i++){
-				if(i == seed-1){	
-					return scanner.nextLine();
+				if(i == seed-1){       
+					String result = "#" + (i+1) + " " + scanner.nextLine();
+					scanner.close();
+					return result;
 				}
-			scanner.nextLine();}
+				scanner.nextLine();}
+			scanner.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		scanner.close();
 		return "#1 licdn.awwni.me/npmp.jpg";
 	}
 }
