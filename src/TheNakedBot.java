@@ -25,11 +25,12 @@ public class TheNakedBot extends PircBot{
 	static String Channel = TheNakedBotWindow.pointsChannel;
 	static String[] SpecialUsers = {"dittochan","obduration","iamcloudchaser","thenakedpuppet","suzuyabot","juicebox5401","e223","wieran1111","emralgreeny","elquilious","zognegnad102","zodiaack","aivycore"};
 	static int linksNumberOfLines = 0;
-	int pointsInterval = 60000;
+	int pointsInterval = 300000;
+	static File kancolleClipsDir = new File("Resources/Sounds/KancolleSounds/");
 	public TheNakedBot() {
 
 		/////TEMP ///////////
-		
+
 		this.setName(TheNakedBotWindow.botName);
 		try {
 			connect("irc.twitch.tv",6667,TheNakedBotWindow.oauth);
@@ -55,9 +56,8 @@ public class TheNakedBot extends PircBot{
 		if(deserializeObject(TheNakedBotWindow.pointsDatabaseFolder + TheNakedBotWindow.pointsChannel + ".ser")==null){
 			pointListA = new HashMap<String,Integer>();
 		}
-
 		Map<String,Integer> pointListNew = new HashMap<String,Integer>();
-		Map<String,Integer> pointList = pointListA;
+		Map<String,Integer> pointList = pointListA; 
 		Timer timer1 = new Timer(pointsInterval, new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -119,7 +119,7 @@ public class TheNakedBot extends PircBot{
 	//////////////////////////////////////COMMANDS///////////////////////////////////////////
 	public void onMessage(String channel, String sender, String login, String hostname, String message) {
 		TheNakedBotWindow.appendLog(sender+ ": " + message + "\n");
-		Timer timer = new Timer(5000,new ActionListener(){
+		Timer timer = new Timer(3000,new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				canRespond = true;
@@ -219,6 +219,19 @@ public class TheNakedBot extends PircBot{
 			timer.restart();
 
 		}
+
+		if(message.matches("!kancolle .+")){
+			String[] params = getParams(message, 1);
+			sendMessage(channel,TheNakedBot.playKancolleClip(params[0]));
+			canRespond = false;
+			timer.restart();
+		}
+
+
+		if(message.equalsIgnoreCase("!kancolle")){
+			sendMessage(channel,"NOT YET");
+		}
+
 		/***************************************************/
 		/*******************Normal Commands*****************/
 		/***************************************************/
@@ -334,7 +347,6 @@ public class TheNakedBot extends PircBot{
 			}}
 		return 0;
 	}
-
 	public void serializeObject(Object object,String file){
 		try
 		{
@@ -350,7 +362,6 @@ public class TheNakedBot extends PircBot{
 			i.printStackTrace();
 		}
 	}
-
 	public static Object deserializeObject(String file){
 		Object e = null;
 		try
@@ -372,6 +383,51 @@ public class TheNakedBot extends PircBot{
 			return null;
 		}
 	}
+	public String[] getParams(String message,int numberOfParameters){
+		message = message.trim();
+		String[] array = new String[numberOfParameters];
+		System.out.println("MESSAGE =" + message);
+		for(int i = numberOfParameters;i!=0;i--){
+			System.out.println("LAST INDEX OF SPACE = " + message.lastIndexOf(" "));
+			String result = message.substring(message.lastIndexOf(" ")+1);
+			System.out.println(i + "  RESULT = " + result);
+			message = message.substring(0, message.lastIndexOf(" "));
+			System.out.println("MESSAGE SUBSTRING = " + message);
+			array[numberOfParameters-i] = result;
+		}			
+		return array;
+	}	
+	public static String playKancolleClip(String girlName){
+		if(kancolleClipsDir.isDirectory()){
+			System.out.println("IS DIRECTORY");
+			File girlFolder = new File(kancolleClipsDir.getPath() + "/" + girlName + "/");
+			System.out.println("PATH: " + girlFolder.getPath());
+			if(girlFolder.exists()){
+				System.out.println("EXISTS");
+				int seed = (int) (Math.random() * (girlFolder.listFiles().length -1) + 1);
+				if(seed > 0){
+					TheNakedBotWindow.playSound(kancolleClipsDir.getPath() +"/" +  girlName + "/" + seed + ".wav");
+					return girlName + " - " + seed;
+				}
+			}
+		}
+		return "";
+	}
+	public void playKancolleClip( String girlName,String number){
+
+		if(kancolleClipsDir.isDirectory()){
+			System.out.println();
+			File girlFolder = new File(kancolleClipsDir.getPath() + girlName);
+			if(girlFolder.exists()){
+				TheNakedBotWindow.playSound(kancolleClipsDir.getPath() + girlName + "/" + number);
+			}
+		}
+	}
+
+
+
+
+
 	public String getRandomLine(File file,int numberOfLines)
 	{	
 		Scanner scanner = null;

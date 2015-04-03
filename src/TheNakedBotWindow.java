@@ -92,7 +92,7 @@ public class TheNakedBotWindow extends JFrame{
 			@Override
 			public void keyTyped(KeyEvent arg0) {	
 			}
-		};
+		};	
 		this.addKeyListener(ctrlWActionListener);
 
 		FlowLayout fLayoutLeft = new FlowLayout(FlowLayout.LEFT);
