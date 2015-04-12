@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.Properties;
+
 import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -29,6 +30,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.Timer;
@@ -47,7 +49,7 @@ public class TheNakedBotWindow extends JFrame{
 	static String botName;
 	static String oauth;
 	static String a;
-	static JTextArea chatLog = new JTextArea();
+	static JTextArea chat = new JTextArea();
 
 	public static void main(String[] args) {
 		TheNakedBotWindow window = new TheNakedBotWindow();
@@ -61,7 +63,7 @@ public class TheNakedBotWindow extends JFrame{
 			setPropertyValue("soundFolder","Resources/Sounds/");
 			setPropertyValue("linksFile","Resources/Links.txt");
 			setPropertyValue("pointsDatabaseFolder","Resources/Points/");
-			setPropertyValue("pointsChannel","#forlorn_king");
+			setPropertyValue("pointsChannel","#obduration");
 			setPropertyValue("botName","Enter Bot Name");
 			setPropertyValue("oauth","Enter Bot's oauth (From http://waa.ai/Iq6)");
 		}
@@ -69,10 +71,10 @@ public class TheNakedBotWindow extends JFrame{
 		soundFolder = getPropertyValue("soundFolder");
 		linksFile = getPropertyValue("linksFile");
 		pointsDatabaseFolder = getPropertyValue("pointsDatabaseFolder");;
-		pointsChannel = getPropertyValue("pointsChannel");;    
+		pointsChannel = getPropertyValue("pointsChannel");   
 		botName = getPropertyValue("botName");
 		oauth = getPropertyValue("oauth");
-		
+
 		TheNakedBot bot = new TheNakedBot();
 		////////////////////////////////MENU STUFF//////////////////////////////////
 		///////////////               ///////////////                    ///////////////
@@ -86,7 +88,10 @@ public class TheNakedBotWindow extends JFrame{
 			}
 
 			@Override
-			public void keyReleased(KeyEvent arg0) {	
+			public void keyReleased(KeyEvent arg0) {
+				if ((arg0.getKeyCode() == KeyEvent.VK_W) && ((arg0.getModifiers() & KeyEvent.CTRL_MASK) != 0)) {
+					System.exit(0);
+				}
 			}
 
 			@Override
@@ -99,7 +104,7 @@ public class TheNakedBotWindow extends JFrame{
 		JMenuBar Menu = new JMenuBar();
 		JMenu File = new JMenu("File");
 		File.setMnemonic('f');
-
+		
 		JMenu add = new JMenu("Add");
 		JMenuItem reconnect = new JMenuItem("Reconnect");
 		JMenuItem exit = new JMenuItem("Exit");
@@ -115,7 +120,7 @@ public class TheNakedBotWindow extends JFrame{
 
 		JPanel soundsPanel = new JPanel(fLayoutLeft);
 		JTextField sounds = new JTextField(soundFolder,15);
-		
+
 		JPanel linksFilePanel = new JPanel(fLayoutLeft);
 		JTextField linksFileField = new JTextField(linksFile,15);
 
@@ -135,6 +140,27 @@ public class TheNakedBotWindow extends JFrame{
 		JPanel saveButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		JButton save = new JButton("Save");
 
+		save.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				setPropertyValue("overlayFolder",overlays.getText());
+				setPropertyValue("soundFolder",sounds.getText());
+				setPropertyValue("linksFile",linksFileField.getText());
+				setPropertyValue("pointsDatabaseFolder",pointsDatabaseField.getText());                
+				if(getPropertyValue("pointsChanel") != pointsChannelField.getText() && getPropertyValue("pointsChanel") != "#"+pointsChannelField.getText()){
+					if(getPropertyValue("pointsChannel") != pointsChannelField.getText() && pointsChannelField.getText().contains("#")){
+						setPropertyValue("pointsChannel",pointsChannelField.getText());
+					}
+					else{
+						setPropertyValue("pointsChannel","#" + pointsChannelField.getText());
+						pointsChannelField.setText("#" + pointsChannelField.getText());
+					}
+				}
+				setPropertyValue("botName",botNameField.getText());
+				setPropertyValue("oauth",oauthField.getText());
+			}});
+
 		saveButtonPanel.add(save);
 
 
@@ -143,10 +169,9 @@ public class TheNakedBotWindow extends JFrame{
 		overlaysPanel.add(new JLabel("Overlays:"));
 		overlaysPanel.add(overlays);
 
-
 		soundsPanel.add(new JLabel("Sounds:  "));
 		soundsPanel.add(sounds);
-		
+
 		linksFilePanel.add(new JLabel("Links File: "));
 		linksFilePanel.add(linksFileField);
 
@@ -163,6 +188,7 @@ public class TheNakedBotWindow extends JFrame{
 		oauthPanel.add(oauthField);
 
 
+
 		preferencesWindow.add(new JLabel(" File Paths: "));
 		preferencesWindow.add(overlaysPanel);
 		preferencesWindow.add(soundsPanel);
@@ -171,34 +197,12 @@ public class TheNakedBotWindow extends JFrame{
 		preferencesWindow.add(pointsChannelPanel);
 		preferencesWindow.add(botNamePanel);
 		preferencesWindow.add(oauthPanel);
-		preferencesWindow.add(saveButtonPanel);
+		preferencesWindow.add(saveButtonPanel); 
+		preferencesWindow.getRootPane().setDefaultButton(save);
 
 		preferencesWindow.setResizable(false);
 		preferencesWindow.setSize(400,300);
 		preferencesWindow.setLocationRelativeTo(getParent());
-
-		save.addActionListener(new ActionListener(){
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				setPropertyValue("overlayFolder",overlays.getText());
-				setPropertyValue("soundFolder",sounds.getText());
-				setPropertyValue("linksFile",linksFileField.getText());
-				setPropertyValue("pointsDatabaseFolder",pointsDatabaseField.getText());                
-				if(getPropertyValue("pointsChanel") != pointsChannelField.getText() && getPropertyValue("pointsChanel") != "#"+pointsChannelField.getText()){
-					if(getPropertyValue("pointsChannel") != pointsChannelField.getText() && pointsChannelField.getText().contains("#")){
-						setPropertyValue("pointsChannel",pointsChannelField.getText());
-					}
-					else{
-						setPropertyValue("pointsChannel","#" + pointsChannelField.getText());
-						pointsChannelField.setText("#" + pointsChannelField.getText());
-					}
-				}
-				setPropertyValue("botName",botNameField.getText());
-				setPropertyValue("oauth",oauthField.getText());
-			}
-
-		});
 
 		preferences.addActionListener(new ActionListener(){
 
@@ -209,6 +213,8 @@ public class TheNakedBotWindow extends JFrame{
 				}      
 			}
 		});
+
+
 		//////////////////////////////////////////////////////////////////
 		settings.setMnemonic('s');
 		////////////////////////////////////////////////////////////////*/
@@ -247,7 +253,9 @@ public class TheNakedBotWindow extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				bot.partChannel(pointsChannel);
-				bot.joinChannel(pointsChannel);
+				pointsChannel = getPropertyValue("pointsChannel");
+				chat.setText("");
+				bot.joinChannel(getPropertyValue("pointsChannel"));
 			}              
 		});
 		exit.addActionListener(new ActionListener(){
@@ -283,7 +291,7 @@ public class TheNakedBotWindow extends JFrame{
 
 				});
 				aboutWindow.add(new JLabel("Made by TheNakedPuppet"));
-				aboutWindow.add(new JLabel("Version b1.001 3/23/15"));
+				aboutWindow.add(new JLabel("Version b4/10"));
 				aboutWindow.add(new JLabel("Special thanks to: "));
 				aboutWindow.add(new JLabel("Obduration and IAmCloudChaser for testing"));
 				aboutWindow.add(new JLabel(" and Hatsuney for general advice"));
@@ -292,6 +300,11 @@ public class TheNakedBotWindow extends JFrame{
 				aboutWindow.setSize(300,225);
 				aboutWindow.setLocationRelativeTo(getParent());                        
 			}});
+	
+		chat.setEditable(false);
+		JScrollPane scrollpane = new JScrollPane(chat);	
+		add(scrollpane);
+		
 		add.add(Option1);
 		add.add(Option2);
 		File.add(add);
@@ -311,7 +324,8 @@ public class TheNakedBotWindow extends JFrame{
 	}
 
 	public static void appendLog(String str){
-		chatLog.append(str);
+		chat.append(str);
+		chat.setCaretPosition(chat.getDocument().getLength());
 	}
 
 	public static void setPropertyValue(String property, String value){
@@ -320,8 +334,7 @@ public class TheNakedBotWindow extends JFrame{
 			output = new FileOutputStream("config.properties");
 			properties.setProperty(property, value);
 			properties.store(output, null);
-			System.out.println("Set Property " + property + " to value:" + properties.getProperty(property));
-
+			output.close();
 		} catch (IOException io) {
 			io.printStackTrace();
 		} finally {
@@ -332,22 +345,18 @@ public class TheNakedBotWindow extends JFrame{
 					e.printStackTrace();
 				}
 			}
-
 		}
 	}
-
 	public String getPropertyValue(String property) {
-		String propFileName = "config.properties";
 		InputStream inputStream;
 		try {
-			inputStream = new FileInputStream(propFileName);
+			inputStream = new FileInputStream("config.properties");
 			properties.load(inputStream);
 			inputStream.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		String result = properties.getProperty(property);
-		System.out.println("Got value: " + result + " from property " + property);
 		return result;
 	}
 	/////////////////////////////////////////////STATIC METHODS/////////////////////////////////////

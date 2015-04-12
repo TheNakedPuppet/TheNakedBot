@@ -9,11 +9,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Scanner;
+
 import javax.swing.Timer;
 
 
@@ -21,25 +22,35 @@ public class TheNakedBot extends PircBot{
 	/////////////////////////////CONSTRUCTOR///////////////////////////////
 	boolean canRespond = true;
 	ArrayList<String> ModList = new ArrayList<String>();
-	static Map<String,Integer> pointListStatic= (Map<String, Integer>) deserializeObject("Resources/Points/" + TheNakedBotWindow.pointsChannel + ".ser");
 	static String Channel = TheNakedBotWindow.pointsChannel;
-	static String[] SpecialUsers = {"dittochan","obduration","iamcloudchaser","thenakedpuppet","suzuyabot","juicebox5401","e223","wieran1111","emralgreeny","elquilious","zognegnad102","zodiaack","aivycore"};
+	static String[] SpecialUsers = {"dittochan","obduration","iamcloudchaser","thenakedpuppet","suzuyabot","juicebox5401","e223","wieran1111","emralgreeny","elquilious","zognegnad102","zodiaack","aivycore","cho_bo"};
 	static int linksNumberOfLines = 0;
-	int pointsInterval = 300000;
 	static File kancolleClipsDir = new File("Resources/Sounds/KancolleSounds/");
-	public TheNakedBot() {
+	static String commandsFile = "Resources/Commands.ser";
+	static Map<String,String> commands = new HashMap<String,String>();
 
-		/////TEMP ///////////
+	public TheNakedBot() {
+		if(!new File("Resources/Commands.ser").exists()){
+			serializeObject(commands,"Resources/Commands.ser");	
+		}
+		try{
+			commands = (HashMap<String,String>)(deserializeObject(commandsFile));
+		}catch(Exception e){
+			System.out.println(commandsFile);
+		}
 
 		this.setName(TheNakedBotWindow.botName);
 		try {
 			connect("irc.twitch.tv",6667,TheNakedBotWindow.oauth);
+			TheNakedBotWindow.appendLog("Connected to twitch\n");
 		} catch (IOException | IrcException e) {
 			e.printStackTrace();
 		}  
 
 		joinChannel(Channel);
+		TheNakedBotWindow.appendLog("Joined Channel " + Channel + "\n\n");
 		setVerbose(true);
+
 		try {
 			File linksFile1 = new File(TheNakedBotWindow.linksFile);
 			Scanner scanner = new Scanner(linksFile1);
@@ -50,52 +61,6 @@ public class TheNakedBot extends PircBot{
 			}
 			scanner.close();
 		} catch (FileNotFoundException e) {e.printStackTrace();}
-
-		@SuppressWarnings("unchecked")
-		Map<String,Integer> pointListA = (HashMap<String,Integer>)deserializeObject(TheNakedBotWindow.pointsDatabaseFolder + TheNakedBotWindow.pointsChannel + ".ser");
-		if(deserializeObject(TheNakedBotWindow.pointsDatabaseFolder + TheNakedBotWindow.pointsChannel + ".ser")==null){
-			pointListA = new HashMap<String,Integer>();
-		}
-		Map<String,Integer> pointListNew = new HashMap<String,Integer>();
-		Map<String,Integer> pointList = pointListA; 
-		Timer timer1 = new Timer(pointsInterval, new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				//Makes arraylist<String,Integer> (Our PoinList)from User array (Our User List). I forget how this works.
-				//This is fucking disgusting
-				ArrayList<User>Users = new ArrayList<User>(Arrays.asList(getUsers(Channel)));
-				for(int i = 0;i<Users.size();i++){
-					if(pointList.containsKey(Users.get(i).getNick())){
-						if(pointList.get(Users.get(i).getNick())<1000){
-							pointList.put(Users.get(i).getNick(), pointList.get(Users.get(i).getNick()) + pointList.get(Users.get(i).getNick())/100 + 1);
-							System.out.println(Channel + " Set user " + Users.get(i).getNick() + "'s total points to " +  pointList.get(Users.get(i).getNick()));
-						}
-						else{
-							pointList.put(Users.get(i).getNick(), pointList.get(Users.get(i).getNick()) + 10);
-							System.out.println(Channel + " Set user " + Users.get(i).getNick() + "'s total points to " +  pointList.get(Users.get(i).getNick()));
-						}
-					}
-					else{
-						pointList.put(Users.get(i).getNick(), 1);
-						System.out.println("Added user " + Users.get(i).getNick());
-					}
-					pointListNew.putAll(pointList);
-				}
-				//Saves new poinlist
-				Users.clear();
-				serializeObject(pointListNew,TheNakedBotWindow.pointsDatabaseFolder + TheNakedBotWindow.pointsChannel + ".ser");
-				TheNakedBot.pointListStatic = pointListNew;
-				System.out.println(Channel + " suzuyabot points = " + getPoints(Channel, "suzuyabot"));
-			}});
-		timer1.setInitialDelay(0);
-		timer1.start();}
-
-
-	/////////////////////////////MAIN//////////////////////////////////////
-	public static void main(String[] args) throws Exception {
-		TheNakedBot bot = new TheNakedBot();
-		Scanner scanner = new Scanner(System.in);
-		if(scanner.hasNext("dc")){scanner.close(); bot.disconnect(); System.exit(0);}
 	}
 
 	///////////////////////////EVENTS/////////////////////////////////////
@@ -118,7 +83,10 @@ public class TheNakedBot extends PircBot{
 
 	//////////////////////////////////////COMMANDS///////////////////////////////////////////
 	public void onMessage(String channel, String sender, String login, String hostname, String message) {
-		TheNakedBotWindow.appendLog(sender+ ": " + message + "\n");
+		long yourmilliseconds = System.currentTimeMillis();
+		SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm:ss");    
+		Date resultdate = new Date(yourmilliseconds);
+		TheNakedBotWindow.appendLog(sdf.format(resultdate) + " " + sender + ": " + message + "\n");
 		Timer timer = new Timer(3000,new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -132,50 +100,20 @@ public class TheNakedBot extends PircBot{
 		/*******************TIMED Commands******************/
 		/***************************************************/
 
-		if (message.equalsIgnoreCase("!overlay murica") && (( isMod(channel,sender) && canRespond) || isSpecialUser(sender))){
-			TheNakedBotWindow.setOverlay(message);
-
-			Timer timera = new Timer(1000, new ActionListener(){
-				@Override
-				public void actionPerformed(ActionEvent arg0) {
-					TheNakedBotWindow.playSound("Resources/Sounds/AMERICANEW.wav");
-				}});
-			timera.setRepeats(false);
-			timera.start();
-			timer.restart();
-			canRespond = false;
-			sendMessage(channel,sender + " is a real American");
-		}
-
-		if (message.equalsIgnoreCase("!overlay default") && (( isMod(channel,sender) && canRespond) || isSpecialUser(sender))){
-			TheNakedBotWindow.setOverlay(message);
-
-			Timer timer2 = new Timer(1000, new ActionListener(){
-				@Override
-				public void actionPerformed(ActionEvent arg0) {
-					TheNakedBotWindow.playSound("Resources/Sounds/ZeldaTheme.wav");
-				}});
-			timer2.setRepeats(false);
-			timer2.start();
-			canRespond = false;
-			timer.restart();
-			sendMessage(channel,sender + " has changed the overlay");
-		}
-
 		if (message.equalsIgnoreCase("!PEEPEE") && canRespond){
-			int cost = 0;
-			if(getPoints(channel,sender) - cost >= 0 || isSpecialUser(sender)){
-				TheNakedBotWindow.playSound("Resources/Sounds/applause.wav");
-				sendMessage(channel,sender + " has a big peepee");
-				try{
-					pointListStatic.put(sender, pointListStatic.get(sender)-cost);
-				}catch(NullPointerException e){
-					System.out.println("pointListStatic." + sender + "returned null :c");
-				}
-			}else sendMessage(channel,"Sorry " + sender + ", you're short " + (cost - getPoints(channel,sender)) + " points for that command ;w;");                
+			TheNakedBotWindow.playSound("Resources/Sounds/applause.wav");
+			sender= Character.toUpperCase(sender.charAt(0)) + sender.substring(1);
+			sendMessage(channel,sender + " has a big peepee");    
 			canRespond = false;
 			timer.restart();
 
+		}
+
+		if(message.matches("!suzuya addcom .+")){
+			String[] params= getParams(message,2,true);
+			commands.put(params[1], params[0]);
+			serializeObject(commands,"Resources/Commands.ser");
+			System.out.println(params[1] + " " + params[0]);
 		}
 
 
@@ -201,74 +139,74 @@ public class TheNakedBot extends PircBot{
 			sendMessage(channel, hours + " hours " + minutes + " minutes " + seconds + " seconds");
 			canRespond = false;
 			timer.restart();
-		}      
-
-		if (message.equalsIgnoreCase("!healthy") && canRespond){
-			int cost = 0;
-			if(getPoints(channel,sender) - cost >= 0 || isSpecialUser(sender)){
-				sendMessage(channel,getRandomLine(new File(TheNakedBotWindow.linksFile),linksNumberOfLines));
-				try{
-					pointListStatic.put(sender, pointListStatic.get(sender)-cost);
-				}catch(NullPointerException e){
-					System.out.println("pointListStatic." + sender + "returned null :c");
-				}
-
-
-			}else sendMessage(channel,"Sorry " + sender + ", you're short " + (cost - getPoints(channel,sender)) + " points for that command ;w;");                
-			canRespond = false;
-			timer.restart();
-
-		}
-
-		if(message.matches("!kancolle .+")){
-			String[] params = getParams(message, 1);
-			sendMessage(channel,TheNakedBot.playKancolleClip(params[0]));
+		}  
+		if (message.toLowerCase().matches("!healthy .+")){
+			String[] params = getParams(message,1,false);
+			sendMessage(channel,getRandomLine(new File(TheNakedBotWindow.linksFile),linksNumberOfLines,Integer.parseInt(params[0])));
 			canRespond = false;
 			timer.restart();
 		}
 
+		if (message.equalsIgnoreCase("!healthy")){
+			sendMessage(channel,getRandomLine(new File(TheNakedBotWindow.linksFile),linksNumberOfLines));
+			canRespond = false;
+			timer.restart();
 
-		if(message.equalsIgnoreCase("!kancolle")){
-			sendMessage(channel,"NOT YET");
+		}
+		if(message.toLowerCase().matches("!kancolle .+")){
+			if(message.matches("!kancolle .+.\\d+")){
+				String[] params = getParams(message, 2,false);
+				sendMessage(channel,TheNakedBot.playKancolleClip(params[1],params[0]));
+			}
+			else{
+				String[] params = getParams(message, 1,false);
+				sendMessage(channel,TheNakedBot.playKancolleClip(params[0]));
+			}
+			canRespond = false;
+			timer.restart();
+
 		}
 
 		/***************************************************/
 		/*******************Normal Commands*****************/
 		/***************************************************/
 
-		if(message.equalsIgnoreCase("!points")) {
-			sendMessage(channel,sender + " points: " + Integer.toString(getPoints(channel,sender)));
-		}
 		if (message.equalsIgnoreCase("!time")) {
 			String time = new java.util.Date().toString();
 			sendMessage(channel, sender + ": The time is now " + time);
 		}      
 		if(message.equalsIgnoreCase("!moist")) {
-			int cost = 2000;
-			if(pointListStatic.get(sender)!=null){
-				if(pointListStatic.get(sender) - cost >= 0 || isSpecialUser(sender)){
-					sendMessage(channel,"AZOOOOOOOOSUUUUUUU");
-				}
-				else sendMessage(channel,"Sorry " + sender + ", you're short " + (cost - getPoints(channel,sender)) + " points for that command ;w;"); 
-			}else System.out.println("pointListStatic.get(" + sender + ") Is null");
+			sendMessage(channel,"AZOOOOOOOOSUUUUUUU");
 		}
 		if((message.equalsIgnoreCase("!dc") || message.equalsIgnoreCase("!off")) && (isMod(channel,sender) || isSpecialUser(sender))){
 			sendMessage(channel,"Goodbye!");
 			disconnect();
 			System.exit(0);
 		}
-		if (message.toLowerCase().contains("!hug ") || message.toLowerCase().contains(" sad ")|| message.toLowerCase().contains(" sadder ")||
-				message.toLowerCase().contains(" saddest ")||message.toLowerCase().contains(" cri")||
-				message.toLowerCase().contains(" cry ")||message.toLowerCase().contains(" depressed ")){
+		if (message.toLowerCase().equalsIgnoreCase("!hug") || message.toLowerCase().contains(" sad ")|| message.toLowerCase().contains(" sadder ")||
+				message.toLowerCase().contains(" saddest ")||message.toLowerCase().contains(" cri ")||message.toLowerCase().contains(";w;")||
+				message.toLowerCase().contains(" cry ")||message.toLowerCase().contains(" depressed ")||message.toLowerCase().contains(";_;")){
+			sender = Character.toUpperCase(sender.charAt(0)) + sender.substring(1);
 			String response = ".me hugs " + sender;
 			sendMessage(channel, response);
 		}
 
+		if (message.toLowerCase().matches("!hug .+")){
+			String[] params = getParams(message,1,false);
+			sender = Character.toUpperCase(sender.charAt(0)) + sender.substring(1);
+			sendMessage(channel,".me and " + sender + " hug " + params[0]);
+		}
+		if (message.toLowerCase().matches("!pet .+")){
+			sender = Character.toUpperCase(sender.charAt(0)) + sender.substring(1);
+			String[] params = getParams(message,1,false);
+			sendMessage(channel,".me and " + sender + " pet " + params[0]);
+		}
+			
 		/***************************************************/
 		/*******************Dummy Commands******************/
 		/***************************************************/
 
-		if(message.equalsIgnoreCase("!skin")){
+		if(message.equalsIgnoreCase("!skin") && channel.equals("#thenakedpuppet")){
 			String response = "Thanks to Tobi/IAmAladdin for the god skin: http://puu.sh/exdNP/820102fd59.osk ";
 			sendMessage(channel, response);
 		}
@@ -276,7 +214,27 @@ public class TheNakedBot extends PircBot{
 		if (message.equalsIgnoreCase("!jesse")){
 			String response = "Fuck you other jesse DansGame";
 			sendMessage(channel, response);
-		}      
+		}
+		//////////////////Making fun of ditto///////////////////
+		if (message.equalsIgnoreCase("!healthy dii") || message.equalsIgnoreCase("!healthy ditto")){
+			String response = "#0 http://waa.ai/vjXo.jpg";
+			sendMessage(channel, response);
+		}
+		if (message.equalsIgnoreCase("!dittostream")){
+			String response = "When ditto starts her stream: http://waa.ai/vjq8.gif";
+			sendMessage(channel, response);
+		}	
+		if (message.equalsIgnoreCase("!dittomic")){
+			String response = "When ditto says something: http://waa.ai/vjq8.gif";
+			sendMessage(channel, response);
+		}	
+		if (message.equalsIgnoreCase("!ditto")){
+			String response = "\"you dick *** hole mother fudgind raisin eating lameo\"";
+			sendMessage(channel, response);
+		}
+		/////////////////////////////////////////////////////////////////
+
+
 		if (message.equalsIgnoreCase("!keyboard")){
 			String response = "Ducky Shine 3 w/ Mx Browns Kreygasm";
 			sendMessage(channel, response);
@@ -339,14 +297,6 @@ public class TheNakedBot extends PircBot{
 		System.out.println(name + " is NOT a special user");
 		return false;
 	}
-	public int getPoints(String channel, String user){
-		if(pointListStatic != null){
-			if(pointListStatic.containsKey(user)){
-				if(isSpecialUser(user)) return 9999;
-				else return pointListStatic.get(user);
-			}}
-		return 0;
-	}
 	public void serializeObject(Object object,String file){
 		try
 		{
@@ -383,20 +333,30 @@ public class TheNakedBot extends PircBot{
 			return null;
 		}
 	}
-	public String[] getParams(String message,int numberOfParameters){
+
+	/************KANCOLLE STUFF******************/
+	public String[] getParams(String message,int numberOfParameters,boolean isAddcom){
 		message = message.trim();
 		String[] array = new String[numberOfParameters];
 		System.out.println("MESSAGE =" + message);
-		for(int i = numberOfParameters;i!=0;i--){
-			System.out.println("LAST INDEX OF SPACE = " + message.lastIndexOf(" "));
+		if(isAddcom){
+			message = message.substring(message.lastIndexOf("addcom ")+7,message.length());
+			numberOfParameters = 2;
 			String result = message.substring(message.lastIndexOf(" ")+1);
-			System.out.println(i + "  RESULT = " + result);
-			message = message.substring(0, message.lastIndexOf(" "));
-			System.out.println("MESSAGE SUBSTRING = " + message);
-			array[numberOfParameters-i] = result;
-		}			
-		return array;
+			array[0] = result;
+			result = message.substring(message.lastIndexOf(" ")+1);
+		}else{
+			for(int i = numberOfParameters;i!=0;i--){
+				System.out.println("LAST INDEX OF SPACE = " + message.lastIndexOf(" "));
+				String result = message.substring(message.lastIndexOf(" ")+1);
+				System.out.println(i + "  RESULT = " + result);
+				message = message.substring(0, message.lastIndexOf(" "));
+				System.out.println("MESSAGE SUBSTRING = " + message);
+				array[numberOfParameters-i] = result;
+			}			
+		}return array;
 	}	
+
 	public static String playKancolleClip(String girlName){
 		if(kancolleClipsDir.isDirectory()){
 			System.out.println("IS DIRECTORY");
@@ -407,26 +367,46 @@ public class TheNakedBot extends PircBot{
 				int seed = (int) (Math.random() * (girlFolder.listFiles().length -1) + 1);
 				if(seed > 0){
 					TheNakedBotWindow.playSound(kancolleClipsDir.getPath() +"/" +  girlName + "/" + seed + ".wav");
+					System.out.println(kancolleClipsDir.getPath() +"\\" +  girlName + "\\Image\\image 9.png");
+					TheNakedBotWindow.writeImage(kancolleClipsDir.getPath() +"\\" +  girlName + "\\Image\\image 9.png",TheNakedBotWindow.overlayFolder + "target.png");
 					return girlName + " - " + seed;
 				}
 			}
 		}
 		return "";
 	}
-	public void playKancolleClip( String girlName,String number){
-
+	public static String playKancolleClip(String girlName,String number){
 		if(kancolleClipsDir.isDirectory()){
-			System.out.println();
-			File girlFolder = new File(kancolleClipsDir.getPath() + girlName);
-			if(girlFolder.exists()){
-				TheNakedBotWindow.playSound(kancolleClipsDir.getPath() + girlName + "/" + number);
+			System.out.println(kancolleClipsDir.getPath() + "/" + girlName + "/" + number + ".wav");
+			File sound = new File(kancolleClipsDir.getPath() + "/" + girlName + "/" + number + ".wav");	
+			if(sound.exists()){
+				TheNakedBotWindow.playSound(kancolleClipsDir.getPath() + "/" + girlName + "/" + number + ".wav");
+				TheNakedBotWindow.writeImage(kancolleClipsDir.getPath() +"\\" +  girlName + "\\Image\\image 9.png",TheNakedBotWindow.overlayFolder + "target.png");
+				return girlName + " - " + number;
 			}
 		}
+		return "";
 	}
-
-
-
-
+	////////////////////////////////////////////////////////////////////////////////////
+	public String getRandomLine(File file,int numberOfLines,int seed)
+	{	
+		Scanner scanner = null;
+		try {
+			scanner = new Scanner(file);
+			for(int i=0;i<numberOfLines;i++){
+				if(i == seed-1){       
+					String result = "#" + (i+1) + " " + scanner.nextLine();
+					scanner.close();
+					return result;
+				}
+				scanner.nextLine();}
+			scanner.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		scanner.close();
+		return "#1 licdn.awwni.me/npmp.jpg";
+	}
 
 	public String getRandomLine(File file,int numberOfLines)
 	{	
