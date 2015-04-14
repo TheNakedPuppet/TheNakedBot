@@ -16,6 +16,7 @@ local.properties
 .settings/
 .loadpath
 .wav
+Resources/*
 
 # External tool builders
 .externalToolBuilders/

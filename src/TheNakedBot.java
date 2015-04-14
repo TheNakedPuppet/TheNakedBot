@@ -23,15 +23,31 @@ public class TheNakedBot extends PircBot{
 	boolean canRespond = true;
 	ArrayList<String> ModList = new ArrayList<String>();
 	static String Channel = TheNakedBotWindow.pointsChannel;
-	static String[] SpecialUsers = {"dittochan","obduration","iamcloudchaser","thenakedpuppet","suzuyabot","juicebox5401","e223","wieran1111","emralgreeny","elquilious","zognegnad102","zodiaack","aivycore","cho_bo"};
+	static String[] SpecialUsers = {"dittochan","obduration","iamcloudchaser","thenakedpuppet","suzuyabot","juicebox5401","e223","wieran1111","emralgreeny","elquilious","zognegnad102","zodiaack","aivycore","cho_bo","cogan126"};
 	static int linksNumberOfLines = 0;
 	static File kancolleClipsDir = new File("Resources/Sounds/KancolleSounds/");
-	static String commandsFile = "Resources/Commands.ser";
+	static String commandsFile = "Resources/" + Channel + "Commands.ser";
 	static Map<String,String> commands = new HashMap<String,String>();
+	static boolean silentMode = true;
 
 	public TheNakedBot() {
-		if(!new File("Resources/Commands.ser").exists()){
-			serializeObject(commands,"Resources/Commands.ser");	
+		if(!new File("Resources/" + Channel + "Commands.ser").exists()){
+			///Put default commands into commands
+			commands.put("!skin", "Thanks to Tobi/IAmAladdin for the god skin: http://puu.sh/exdNP/820102fd59.osk ");
+			commands.put("!healthy dii", "#0 http://waa.ai/vjXo.jpg");
+			commands.put("!healthy ditto", "#0 http://waa.ai/vjXo.jpg");
+			commands.put("!dittostream", "When ditto starts streaming: http://waa.ai/vjq8.gif");
+			commands.put("!dittomic", "When ditto says something: http://waa.ai/vjq8.gif");
+			commands.put("!ditto", "\"you dick *** hole mother fudgind raisin eating lameo\"");
+			commands.put("!keyboard", "Ducky Shine 3 w/ Mx Browns Kreygasm");
+			commands.put("!tablet", "I hover on a CTL-480");
+			commands.put("!area", "4749x4749 on 1920x1080 monitor");
+			commands.put("!chippy", "http://i.imgur.com/46eZfIW.gif");
+			commands.put("!res",  "Windowed 1600x900");
+			commands.put("!calvin", "http://waa.ai/vvLj.jpg");
+
+			serializeObject(commands,commandsFile);	
+			System.out.println("New commands file saved in " + commandsFile);
 		}
 		try{
 			commands = (HashMap<String,String>)(deserializeObject(commandsFile));
@@ -93,14 +109,22 @@ public class TheNakedBot extends PircBot{
 				canRespond = true;
 			}              
 		});
+		if(channel.equalsIgnoreCase("#thenakedpuppet") || channel.equalsIgnoreCase("#dittochan")|| channel.equalsIgnoreCase("#obduration")) silentMode = false;
+		if(sender.equalsIgnoreCase("thenakedpuppet")) sender = "TNP";
 		timer.setRepeats(false);
 		timer.start();
-
+		/***************************************************/
+		/*****************Array Commands********************/
+		/***************************************************/
+		if(commands.containsKey(message.toLowerCase())&&!silentMode){
+			sendMessage(channel,commands.get(message.toLowerCase()).replace("%sender%", sender));
+		}
+	
 		/***************************************************/
 		/*******************TIMED Commands******************/
 		/***************************************************/
 
-		if (message.equalsIgnoreCase("!PEEPEE") && canRespond){
+		if (message.equalsIgnoreCase("!PEEPEE") && canRespond &&!silentMode){
 			TheNakedBotWindow.playSound("Resources/Sounds/applause.wav");
 			sender= Character.toUpperCase(sender.charAt(0)) + sender.substring(1);
 			sendMessage(channel,sender + " has a big peepee");    
@@ -109,15 +133,25 @@ public class TheNakedBot extends PircBot{
 
 		}
 
-		if(message.matches("!suzuya addcom .+")){
+		if(message.matches("!suzuya addcom .+") &&!silentMode){
 			String[] params= getParams(message,2,true);
-			commands.put(params[1], params[0]);
-			serializeObject(commands,"Resources/Commands.ser");
-			System.out.println(params[1] + " " + params[0]);
+			commands.put(params[0].toLowerCase(), params[1]);
+			serializeObject(commands,commandsFile);
+			sendMessage(channel,"Added command " + params[0].toLowerCase() + " " + params[1]);
+			System.out.println(commands.toString());
+		}
+		if(message.matches("!suzuya remove .+") &&!silentMode){
+			String[] params= getParams(message,1,false);
+			commands.remove(params[0]);
+			serializeObject(commands,commandsFile);
+			sendMessage(channel,"Command " + params[0] + " removed I think");
+		}
+		if(message.equalsIgnoreCase("!commands")){
+			sendMessage(channel,"Commands for this channel are: " + commands.keySet().toString().replace("[", "").replace("]",""));
 		}
 
 
-		if(message.equalsIgnoreCase("!np") || message.equalsIgnoreCase("!song") || message.equalsIgnoreCase("!map")){
+		if((message.equalsIgnoreCase("!np") || message.equalsIgnoreCase("!song") || message.equalsIgnoreCase("!map")) &&!silentMode){
 			String content = null;
 			try (Scanner scanner = new Scanner(new File("Resources/NP/np.txt")).useDelimiter("\\Z")) {
 				content = ".me - " +scanner.next();
@@ -129,7 +163,7 @@ public class TheNakedBot extends PircBot{
 			timer.restart();
 			sendMessage(channel,content);
 		}
-		if(message.equalsIgnoreCase("!uptime")&& canRespond ){
+		if(message.equalsIgnoreCase("!uptime")&& canRespond &&!silentMode){
 			long timeElapsed = System.currentTimeMillis() - TheNakedBotWindow.startTime;
 			int seconds = (int)(timeElapsed / 1000);
 			int minutes = seconds / 60;
@@ -140,20 +174,20 @@ public class TheNakedBot extends PircBot{
 			canRespond = false;
 			timer.restart();
 		}  
-		if (message.toLowerCase().matches("!healthy .+")){
+		if (message.toLowerCase().matches("!healthy .+") &&!silentMode){
 			String[] params = getParams(message,1,false);
 			sendMessage(channel,getRandomLine(new File(TheNakedBotWindow.linksFile),linksNumberOfLines,Integer.parseInt(params[0])));
 			canRespond = false;
 			timer.restart();
 		}
 
-		if (message.equalsIgnoreCase("!healthy")){
+		if (message.equalsIgnoreCase("!healthy") &&!silentMode){
 			sendMessage(channel,getRandomLine(new File(TheNakedBotWindow.linksFile),linksNumberOfLines));
 			canRespond = false;
 			timer.restart();
 
 		}
-		if(message.toLowerCase().matches("!kancolle .+")){
+		if(message.toLowerCase().matches("!kancolle .+") &&!silentMode){
 			if(message.matches("!kancolle .+.\\d+")){
 				String[] params = getParams(message, 2,false);
 				sendMessage(channel,TheNakedBot.playKancolleClip(params[1],params[0]));
@@ -171,21 +205,21 @@ public class TheNakedBot extends PircBot{
 		/*******************Normal Commands*****************/
 		/***************************************************/
 
-		if (message.equalsIgnoreCase("!time")) {
+		if (message.equalsIgnoreCase("!time")&&!silentMode) {
 			String time = new java.util.Date().toString();
 			sendMessage(channel, sender + ": The time is now " + time);
 		}      
-		if(message.equalsIgnoreCase("!moist")) {
+		if(message.equalsIgnoreCase("!moist")&&!silentMode) {
 			sendMessage(channel,"AZOOOOOOOOSUUUUUUU");
 		}
-		if((message.equalsIgnoreCase("!dc") || message.equalsIgnoreCase("!off")) && (isMod(channel,sender) || isSpecialUser(sender))){
+		if((message.equalsIgnoreCase("!dc") || message.equalsIgnoreCase("!off")) && (isMod(channel,sender) || isSpecialUser(sender))&&!silentMode){
 			sendMessage(channel,"Goodbye!");
 			disconnect();
 			System.exit(0);
 		}
-		if (message.toLowerCase().equalsIgnoreCase("!hug") || message.toLowerCase().contains(" sad ")|| message.toLowerCase().contains(" sadder ")||
+		if ((message.toLowerCase().equalsIgnoreCase("!hug") || message.toLowerCase().contains(" sad ")|| message.toLowerCase().contains(" sadder ")||
 				message.toLowerCase().contains(" saddest ")||message.toLowerCase().contains(" cri ")||message.toLowerCase().contains(";w;")||
-				message.toLowerCase().contains(" cry ")||message.toLowerCase().contains(" depressed ")||message.toLowerCase().contains(";_;")){
+				message.toLowerCase().contains(" cry ")||message.toLowerCase().contains(" depressed ")||message.toLowerCase().contains(";_;"))&&!silentMode){
 			sender = Character.toUpperCase(sender.charAt(0)) + sender.substring(1);
 			String response = ".me hugs " + sender;
 			sendMessage(channel, response);
@@ -201,68 +235,24 @@ public class TheNakedBot extends PircBot{
 			String[] params = getParams(message,1,false);
 			sendMessage(channel,".me and " + sender + " pet " + params[0]);
 		}
-			
-		/***************************************************/
-		/*******************Dummy Commands******************/
-		/***************************************************/
 
-		if(message.equalsIgnoreCase("!skin") && channel.equals("#thenakedpuppet")){
-			String response = "Thanks to Tobi/IAmAladdin for the god skin: http://puu.sh/exdNP/820102fd59.osk ";
-			sendMessage(channel, response);
+		if(message.toLowerCase().contains("bot")&& canRespond && !silentMode){
+			if(message.toLowerCase().contains("bott")){
+				sendMessage(channel,message.replace("bott", "butt"));
+			}else{
+				sendMessage(channel,message.replace("bot", "butt"));
+			}
+			canRespond = false;
+			timer.restart();
 		}
 
-		if (message.equalsIgnoreCase("!jesse")){
-			String response = "Fuck you other jesse DansGame";
-			sendMessage(channel, response);
+		if (message.equalsIgnoreCase("!silent on")){
+			silentMode = true;
 		}
-		//////////////////Making fun of ditto///////////////////
-		if (message.equalsIgnoreCase("!healthy dii") || message.equalsIgnoreCase("!healthy ditto")){
-			String response = "#0 http://waa.ai/vjXo.jpg";
-			sendMessage(channel, response);
+		if (message.equalsIgnoreCase("!silent off")){
+			silentMode = false;
 		}
-		if (message.equalsIgnoreCase("!dittostream")){
-			String response = "When ditto starts her stream: http://waa.ai/vjq8.gif";
-			sendMessage(channel, response);
-		}	
-		if (message.equalsIgnoreCase("!dittomic")){
-			String response = "When ditto says something: http://waa.ai/vjq8.gif";
-			sendMessage(channel, response);
-		}	
-		if (message.equalsIgnoreCase("!ditto")){
-			String response = "\"you dick *** hole mother fudgind raisin eating lameo\"";
-			sendMessage(channel, response);
-		}
-		/////////////////////////////////////////////////////////////////
 
-
-		if (message.equalsIgnoreCase("!keyboard")){
-			String response = "Ducky Shine 3 w/ Mx Browns Kreygasm";
-			sendMessage(channel, response);
-		}
-		if (message.equalsIgnoreCase("!tablet")){
-			String response = "I hover on a CTL-480";
-			sendMessage(channel, response);
-		}
-		if (message.equalsIgnoreCase("!area")){
-			String response = "4749x4749 on 1920x1080 monitor";
-			sendMessage(channel, response);
-		}
-		if (message.equalsIgnoreCase("!game")){
-			String response = "I stream CS:GO on osu! because streaming it under CS:GO would show my viewer count in game and I don't like that";
-			sendMessage(channel, response);
-		}
-		if (message.equalsIgnoreCase("!chippy")){
-			String response = "http://i.imgur.com/46eZfIW.gif";
-			sendMessage(channel, response);
-		}
-		if (message.equalsIgnoreCase("!res")){
-			String response = "Windowed 1600x900";
-			sendMessage(channel, response);
-		}
-		if (message.equalsIgnoreCase("!calvin")){
-			String response = "http://waa.ai/vvLj.jpg";
-			sendMessage(channel, response);
-		}
 	}
 
 	///////////////////////////CHANNEL STUFF//////////////////////////////
@@ -342,9 +332,11 @@ public class TheNakedBot extends PircBot{
 		if(isAddcom){
 			message = message.substring(message.lastIndexOf("addcom ")+7,message.length());
 			numberOfParameters = 2;
-			String result = message.substring(message.lastIndexOf(" ")+1);
+			String result = message.substring(0,message.indexOf(" "));
 			array[0] = result;
-			result = message.substring(message.lastIndexOf(" ")+1);
+			result = message.substring(message.indexOf(" ")+1);
+			array[1] = result;
+			return array;
 		}else{
 			for(int i = numberOfParameters;i!=0;i--){
 				System.out.println("LAST INDEX OF SPACE = " + message.lastIndexOf(" "));
